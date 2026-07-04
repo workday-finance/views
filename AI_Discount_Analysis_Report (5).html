@@ -1,0 +1,1003 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Product Discount Analysis | P&amp;T and Sales Finance</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,75..125,100..900;1,75..125,100..900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --wd-navy:      #0A3554;
+    --wd-blue:      #005CB9;
+    --wd-sky:       #0077C8;
+    --wd-teal:      #00A3AF;
+    --wd-orange:    #F26B21;
+    --wd-light:     #F4F7FB;
+    --wd-mid:       #E0EAF4;
+    --wd-border:    #C8D8EA;
+    --wd-text:      #1A2C3D;
+    --wd-muted:     #5B7A95;
+    --wd-white:     #FFFFFF;
+    --green:        #1A7B4B;
+    --green-bg:     #E6F4ED;
+    --red:          #C0392B;
+    --red-bg:       #FDECEA;
+    --amber:        #B45309;
+    --amber-bg:     #FEF3C7;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Archivo', sans-serif;
+    background: var(--wd-light);
+    color: var(--wd-text);
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  .topbar {
+    background: var(--wd-navy);
+    height: 56px;
+    display: flex;
+    align-items: center;
+    padding: 0 40px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    border-bottom: 3px solid var(--wd-orange);
+  }
+  .topbar-logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: white;
+    font-weight: 700;
+    font-size: 18px;
+    letter-spacing: -0.3px;
+  }
+  .topbar-badge {
+    margin-left: auto;
+    background: var(--wd-orange);
+    color: white;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 3px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  .page { max-width: 1180px; margin: 0 auto; padding: 40px 32px 80px; }
+  .report-header {
+    background: linear-gradient(135deg, var(--wd-navy) 0%, var(--wd-blue) 60%, var(--wd-sky) 100%);
+    border-radius: 10px;
+    padding: 48px 52px;
+    color: white;
+    margin-bottom: 32px;
+    position: relative;
+    overflow: hidden;
+  }
+  .report-header::after {
+    content: '';
+    position: absolute;
+    right: -60px; top: -60px;
+    width: 320px; height: 320px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.05);
+  }
+  .report-header::before {
+    content: '';
+    position: absolute;
+    right: 40px; bottom: -80px;
+    width: 200px; height: 200px;
+    border-radius: 50%;
+    background: rgba(0,163,175,0.15);
+  }
+  .report-eyebrow {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--wd-teal);
+    margin-bottom: 10px;
+  }
+  .report-title {
+    font-size: 32px;
+    font-weight: 800;
+    line-height: 1.15;
+    margin-bottom: 10px;
+    letter-spacing: -0.5px;
+  }
+  .report-sub {
+    font-size: 15px;
+    color: rgba(255,255,255,0.72);
+    font-weight: 400;
+    margin-bottom: 28px;
+  }
+  .report-meta { display: flex; gap: 28px; flex-wrap: wrap; }
+  .meta-item { display: flex; flex-direction: column; gap: 2px; }
+  .meta-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: rgba(255,255,255,0.5); font-weight: 600; }
+  .meta-value { font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.9); }
+  .section-nav { display: flex; gap: 8px; margin-bottom: 32px; flex-wrap: wrap; }
+  .nav-pill {
+    padding: 8px 18px;
+    border-radius: 24px;
+    border: 1.5px solid var(--wd-border);
+    background: white;
+    color: var(--wd-blue);
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.15s;
+    font-family: 'Archivo', sans-serif;
+  }
+  .nav-pill:hover { background: var(--wd-blue); color: white; border-color: var(--wd-blue); }
+  .section { margin-bottom: 48px; }
+  .section-header { display: flex; align-items: center; gap: 14px; margin-bottom: 20px; }
+  .section-num {
+    width: 32px; height: 32px;
+    background: var(--wd-blue);
+    color: white;
+    font-weight: 800;
+    font-size: 13px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .section-title { font-size: 18px; font-weight: 700; color: var(--wd-navy); letter-spacing: -0.2px; }
+  .section-desc { font-size: 13px; color: var(--wd-muted); margin-top: 2px; }
+  .kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 28px; }
+  .kpi-card {
+    background: white;
+    border: 1px solid var(--wd-border);
+    border-radius: 8px;
+    padding: 20px 22px;
+    position: relative;
+    overflow: hidden;
+  }
+  .kpi-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+  .kpi-card.blue::before  { background: var(--wd-blue); }
+  .kpi-card.teal::before  { background: var(--wd-teal); }
+  .kpi-card.orange::before { background: var(--wd-orange); }
+  .kpi-card.green::before { background: var(--green); }
+  .kpi-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--wd-muted); margin-bottom: 6px; }
+  .kpi-value { font-size: 28px; font-weight: 800; color: var(--wd-navy); letter-spacing: -1px; line-height: 1; margin-bottom: 6px; }
+  .kpi-context { font-size: 12px; color: var(--wd-muted); }
+  .kpi-delta {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 4px;
+    margin-top: 4px;
+  }
+  .kpi-delta.down { background: var(--green-bg); color: var(--green); }
+  .kpi-delta.up   { background: var(--red-bg);   color: var(--red); }
+  .callout-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 28px; }
+  .callout {
+    background: white;
+    border-radius: 8px;
+    padding: 20px 22px;
+    border: 1px solid var(--wd-border);
+    border-left: 4px solid var(--wd-blue);
+  }
+  .callout.positive { border-left-color: var(--green); }
+  .callout.caution  { border-left-color: var(--amber); }
+  .callout.insight  { border-left-color: var(--wd-teal); }
+  .callout-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: var(--wd-muted); margin-bottom: 6px; }
+  .callout-body  { font-size: 13.5px; color: var(--wd-text); line-height: 1.55; }
+  strong { font-weight: 700; }
+  .table-wrap { background: white; border: 1px solid var(--wd-border); border-radius: 8px; overflow: hidden; margin-bottom: 24px; }
+  .table-cap {
+    padding: 14px 20px 10px;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--wd-muted);
+    border-bottom: 1px solid var(--wd-mid);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .table-cap .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--wd-blue); flex-shrink: 0; }
+  table { width: 100%; border-collapse: collapse; }
+  thead th {
+    background: var(--wd-navy);
+    color: white;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    padding: 10px 16px;
+    text-align: center;
+  }
+  thead th:first-child { text-align: left; }
+  tbody tr { border-bottom: 1px solid var(--wd-mid); }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:nth-child(even) { background: #FAFCFE; }
+  tbody tr:hover { background: var(--wd-mid); }
+  tbody td { padding: 10px 16px; font-size: 13px; text-align: center; color: var(--wd-text); }
+  tbody td:first-child { text-align: left; font-weight: 500; }
+  .total-row td { font-weight: 700; background: var(--wd-mid) !important; color: var(--wd-navy); }
+  .sub-header td {
+    background: var(--wd-light) !important;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--wd-muted);
+    padding: 8px 16px;
+    border-bottom: 1px solid var(--wd-border);
+  }
+  .disc { display: inline-block; padding: 3px 9px; border-radius: 4px; font-weight: 700; font-size: 12.5px; }
+  .disc-low   { background: var(--green-bg); color: var(--green); }
+  .disc-mid   { background: var(--amber-bg); color: var(--amber); }
+  .disc-high  { background: var(--red-bg);   color: var(--red); }
+  .disc-vhigh { background: #FDE0DC;          color: #991B1B; }
+  .trend-down { color: var(--green); font-weight: 700; }
+  .trend-up   { color: var(--red);   font-weight: 700; }
+  .trend-flat { color: var(--wd-muted); font-weight: 600; }
+  .deal-count { font-size: 11px; color: var(--wd-muted); display: block; }
+  .fc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px; }
+  .fc-tile { background: white; border: 1px solid var(--wd-border); border-radius: 8px; overflow: hidden; }
+  .fc-tile-head {
+    background: var(--wd-navy);
+    padding: 12px 18px;
+    color: white;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .period-badge { background: var(--wd-teal); color: white; font-size: 10px; padding: 2px 8px; border-radius: 3px; font-weight: 700; }
+  .fc-row { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border-bottom: 1px solid var(--wd-mid); }
+  .fc-row:last-child { border-bottom: none; }
+  .fc-tier-label { font-size: 13px; font-weight: 600; color: var(--wd-text); }
+  .fc-tier-sub { font-size: 11px; color: var(--wd-muted); margin-top: 1px; }
+  .fc-nums { text-align: right; }
+  .fc-cents { font-size: 22px; font-weight: 800; color: var(--wd-navy); }
+  .method-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .method-card { background: white; border: 1px solid var(--wd-border); border-radius: 8px; padding: 22px; }
+  .method-card h4 { font-size: 13px; font-weight: 700; color: var(--wd-navy); margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+  .method-card h4 span {
+    width: 20px; height: 20px;
+    background: var(--wd-blue);
+    color: white;
+    font-size: 11px;
+    border-radius: 4px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800;
+    flex-shrink: 0;
+  }
+  .method-card ul { list-style: none; padding: 0; }
+  .method-card ul li {
+    font-size: 13px;
+    color: var(--wd-muted);
+    padding: 5px 0;
+    border-bottom: 1px solid var(--wd-light);
+    display: flex;
+    gap: 8px;
+  }
+  .method-card ul li::before { content: '→'; color: var(--wd-teal); font-weight: 700; flex-shrink: 0; }
+  .method-card ul li:last-child { border-bottom: none; }
+  .report-footer {
+    margin-top: 64px;
+    padding-top: 24px;
+    border-top: 1px solid var(--wd-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .footer-left { font-size: 12px; color: var(--wd-muted); }
+  .footer-right { font-size: 11px; color: var(--wd-muted); text-align: right; }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .report-header { animation: fadeUp 0.4s ease both; }
+  .section { animation: fadeUp 0.4s ease both; }
+  .section:nth-child(2) { animation-delay: 0.06s; }
+  .section:nth-child(3) { animation-delay: 0.12s; }
+  .section:nth-child(4) { animation-delay: 0.18s; }
+  .section:nth-child(5) { animation-delay: 0.24s; }
+  .section:nth-child(6) { animation-delay: 0.30s; }
+  @media print { .topbar { position: relative; } .section-nav { display: none; } }
+</style>
+</head>
+<body>
+
+<nav class="topbar">
+  <div class="topbar-logo">
+    <svg width="32" height="32" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect width="40" height="40" rx="6" fill="#F26B21"/>
+      <path d="M8 28L14 12L20 24L26 16L32 28" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    P&amp;T and Sales Finance
+  </div>
+  <span class="topbar-badge">Confidential</span>
+</nav>
+
+<div class="page">
+
+  <div class="report-header">
+    <div class="report-eyebrow">P&amp;T and Sales Finance · AI Pricing Review</div>
+    <div class="report-title">AI Product Discount Analysis</div>
+    <div class="report-sub">Q3 FY26 — Q4 FY26 — Q1 FY27 | ACV-weighted discounts | Prepared for Julie, SVP Finance</div>
+    <div class="report-meta">
+      <div class="meta-item"><span class="meta-label">Prepared</span><span class="meta-value">June 2026</span></div>
+      <div class="meta-item"><span class="meta-label">Data Source</span><span class="meta-value">AI SKUs + Flex Credits Only tabs</span></div>
+      <div class="meta-item"><span class="meta-label">Coverage</span><span class="meta-value">Q3 FY26 – Q2 FY27 (partial)</span></div>
+      <div class="meta-item"><span class="meta-label">Segments</span><span class="meta-value">LE &amp; ME (Global)</span></div>
+      <div class="meta-item"><span class="meta-label">Requested By</span><span class="meta-value">Julie, SVP Finance</span></div>
+    </div>
+  </div>
+
+  <div class="section-nav">
+    <a class="nav-pill" href="#exec-summary">Executive Summary</a>
+    <a class="nav-pill" href="#net-new">Net New Deals</a>
+    <a class="nav-pill" href="#addon">Add-on Deals</a>
+    <a class="nav-pill" href="#flex">Flex Credits</a>
+    <a class="nav-pill" href="#hiredscore">HiredScore &amp; Evisort</a>
+    <a class="nav-pill" href="#methodology">Methodology</a>
+    <a class="nav-pill" href="#analyst-script" style="border-color:#4B5563;color:#4B5563;">Analyst Script</a>
+  </div>
+
+  <!-- EXEC SUMMARY -->
+  <div class="section" id="exec-summary">
+    <div class="section-header">
+      <div class="section-num" style="background:var(--wd-orange);font-size:16px;">✦</div>
+      <div>
+        <div class="section-title">Executive Summary</div>
+        <div class="section-desc">Key findings and recommendations for Julie's review</div>
+      </div>
+    </div>
+
+    <div class="kpi-row">
+      <div class="kpi-card blue">
+        <div class="kpi-label">Net New — All Segments</div>
+        <div class="kpi-value">78.0%</div>
+        <div class="kpi-context">ACV-weighted discount, Q1 FY27 · 47 deals</div>
+        <div class="kpi-delta up">▲ Elevated vs Q4 FY26</div>
+      </div>
+      <div class="kpi-card orange">
+        <div class="kpi-label">Add-on — All Segments</div>
+        <div class="kpi-value">57.4%</div>
+        <div class="kpi-context">ACV-weighted discount, Q1 FY27 · 147 deals</div>
+        <div class="kpi-delta down">▼ 8.8 pts vs Q3 FY26</div>
+      </div>
+      <div class="kpi-card teal">
+        <div class="kpi-label">Flex Credits &lt;5M — Q1</div>
+        <div class="kpi-value">9.00¢</div>
+        <div class="kpi-context">Avg price per credit</div>
+        <div class="kpi-delta down">▲ +2.3¢ vs 2H FY26</div>
+      </div>
+      <div class="kpi-card green">
+        <div class="kpi-label">Evisort New SKU — Q1</div>
+        <div class="kpi-value">59.3%</div>
+        <div class="kpi-context">Avg discount, Q1 FY27</div>
+        <div class="kpi-delta" style="background:#EBF3FB;color:var(--wd-blue);">FY27 baseline (18 deals)</div>
+      </div>
+    </div>
+
+    <div class="callout-grid">
+      <div class="callout positive">
+        <div class="callout-title">✓ Positive — Add-on Discount Discipline Improving</div>
+        <div class="callout-body">Add-on discounting fell from <strong>66.2% in Q3 FY26 to 57.4% in Q1 FY27</strong> on an ACV-weighted basis. ME is leading the improvement: ME Add-on dropped from <strong>48.7% → 42.5%</strong>. AI-Only Add-on fell from <strong>74.7% → 47.3%</strong> — a 27-point reduction, the strongest improvement signal in the dataset.</div>
+      </div>
+      <div class="callout caution">
+        <div class="callout-title">⚠ Watch — Net New Discounts Remain Persistently High</div>
+        <div class="callout-body">Net New remains highly elevated on an ACV-weighted basis — LE at <strong>82.1% in Q1 FY27</strong> (up from 80.5% in Q3). ME is better at <strong>72.2%</strong> but also elevated. Overall Net New at <strong>78.0%</strong> has barely moved across three quarters. At these levels, net revenue realization on new AI logos is heavily compressed and warrants a specific floor conversation.</div>
+      </div>
+      <div class="callout insight">
+        <div class="callout-title">↗ Insight — Flex Credits Pricing Tightened Significantly</div>
+        <div class="callout-body">The biggest positive surprise: deals below 5M credits (8¢ floor) saw avg price rise from <strong>6.73¢ in 2H FY26 to 9.00¢ in Q1 FY27</strong>, with discount falling from 34.4% to 12.8%. The 5M+ tier (6¢ floor) now has 10 deals in 2H FY26 and 4 in Q1 FY27 — still directional but more usable. List price across all tiers is 10¢.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- NET NEW -->
+  <div class="section" id="net-new">
+    <div class="section-header">
+      <div class="section-num">1</div>
+      <div>
+        <div class="section-title">AI Products in Net New Deals</div>
+        <div class="section-desc">All Net New deals include core HCM / FIN — shown as total and broken out by segment. AI_ONLY split not applicable for Net New.</div>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <div class="table-cap"><span class="dot"></span>Net New — Avg Discount % by Quarter &amp; Segment</div>
+      <table>
+        <thead>
+          <tr><th>Segment</th><th>Q3 FY26</th><th>Q4 FY26</th><th>Q1 FY27</th><th>Q2 FY27*</th><th>Trend Q3 → Q1</th></tr>
+        </thead>
+        <tbody>
+          <tr class="sub-header"><td colspan="6">Large Enterprise (LE)</td></tr>
+          <tr>
+            <td>LE – Large Enterprise</td>
+            <td><span class="disc disc-vhigh">80.5%</span><span class="deal-count">24 deals</span></td>
+            <td><span class="disc disc-vhigh">76.1%</span><span class="deal-count">24 deals</span></td>
+            <td><span class="disc disc-vhigh">82.1%</span><span class="deal-count">16 deals</span></td>
+            <td><span class="disc disc-vhigh">88.0%</span><span class="deal-count">4 deals</span></td>
+            <td><span class="trend-up">▲ 1.6 pts</span></td>
+          </tr>
+          <tr class="sub-header"><td colspan="6">Mid-Market (ME)</td></tr>
+          <tr>
+            <td>ME – Mid-Market</td>
+            <td><span class="disc disc-high">61.3%</span><span class="deal-count">31 deals</span></td>
+            <td><span class="disc disc-high">67.1%</span><span class="deal-count">69 deals</span></td>
+            <td><span class="disc disc-high">72.2%</span><span class="deal-count">31 deals</span></td>
+            <td><span class="disc disc-mid">44.9%</span><span class="deal-count">7 deals</span></td>
+            <td><span class="trend-up">▲ 10.9 pts</span></td>
+          </tr>
+          <tr class="sub-header"><td colspan="6">Combined</td></tr>
+          <tr class="total-row">
+            <td>▸ Total (LE + ME)</td>
+            <td>77.3% <span class="deal-count">55 deals</span></td>
+            <td>71.7% <span class="deal-count">93 deals</span></td>
+            <td>78.0% <span class="deal-count">47 deals</span></td>
+            <td>77.2% <span class="deal-count">11 deals</span></td>
+            <td><span class="trend-flat">▲ 0.7 pts</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="font-size:11px;color:var(--wd-muted);margin-top:-16px;margin-bottom:24px;">* Q2 FY27 deal counts are low — interpret directionally only.</p>
+
+    <div class="table-wrap">
+      <div class="table-cap"><span class="dot" style="background:#7C3AED"></span>1b — Net New broken down: AI products alongside Core HCM / FIN (AI_ONLY = FALSE)</div>
+      <table>
+        <thead>
+          <tr><th>Segment</th><th>Q3 FY26</th><th>Q4 FY26</th><th>Q1 FY27</th><th>Q2 FY27*</th><th>Trend Q3 → Q1</th></tr>
+        </thead>
+        <tbody>
+          <tr class="sub-header"><td colspan="6">Large Enterprise (LE)</td></tr>
+          <tr>
+            <td>LE – Large Enterprise</td>
+            <td><span class="disc disc-vhigh">80.7%</span><span class="deal-count">22 deals</span></td>
+            <td><span class="disc disc-vhigh">76.1%</span><span class="deal-count">24 deals</span></td>
+            <td><span class="disc disc-vhigh">83.0%</span><span class="deal-count">15 deals</span></td>
+            <td><span class="disc disc-vhigh">88.0%</span><span class="deal-count">4 deals</span></td>
+            <td><span class="trend-up">▲ 2.3 pts</span></td>
+          </tr>
+          <tr class="sub-header"><td colspan="6">Mid-Market (ME)</td></tr>
+          <tr>
+            <td>ME – Mid-Market</td>
+            <td><span class="disc disc-high">61.0%</span><span class="deal-count">24 deals</span></td>
+            <td><span class="disc disc-high">67.6%</span><span class="deal-count">60 deals</span></td>
+            <td><span class="disc disc-high">74.1%</span><span class="deal-count">28 deals</span></td>
+            <td><span class="disc disc-mid">44.9%</span><span class="deal-count">7 deals</span></td>
+            <td><span class="trend-up">▲ 13.1 pts</span></td>
+          </tr>
+          <tr class="sub-header"><td colspan="6">Combined</td></tr>
+          <tr class="total-row">
+            <td>▸ Total (LE + ME)</td>
+            <td>77.9% <span class="deal-count">46 deals</span></td>
+            <td>72.1% <span class="deal-count">84 deals</span></td>
+            <td>79.3% <span class="deal-count">43 deals</span></td>
+            <td>77.2% <span class="deal-count">11 deals</span></td>
+            <td><span class="trend-up">▲ 1.4 pts</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="font-size:11px;color:var(--wd-muted);margin-top:-16px;margin-bottom:24px;">Note: All Net New deals include core HCM / FIN — AI_ONLY = TRUE does not apply to Net New. * Q2 FY27 low count, directional only.</p>
+  </div>
+
+  <!-- ADD-ON -->
+  <div class="section" id="addon">
+    <div class="section-header">
+      <div class="section-num">2</div>
+      <div>
+        <div class="section-title">AI Products in Add-on Deals</div>
+        <div class="section-desc">Two views: all add-ons · AI-only add-ons (AI_ONLY=TRUE)</div>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <div class="table-cap"><span class="dot" style="background:var(--wd-teal)"></span>2a — All Add-on Deals (AI products present in any add-on)</div>
+      <table>
+        <thead>
+          <tr><th>Segment</th><th>Q3 FY26</th><th>Q4 FY26</th><th>Q1 FY27</th><th>Q2 FY27*</th><th>Trend Q3 → Q1</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>LE – Large Enterprise</td>
+            <td><span class="disc disc-vhigh">70.3%</span><span class="deal-count">91 deals</span></td>
+            <td><span class="disc disc-vhigh">75.1%</span><span class="deal-count">199 deals</span></td>
+            <td><span class="disc disc-high">59.8%</span><span class="deal-count">82 deals</span></td>
+            <td><span class="disc disc-vhigh">84.0%</span><span class="deal-count">20 deals</span></td>
+            <td><span class="trend-down">▼ 10.5 pts</span></td>
+          </tr>
+          <tr>
+            <td>ME – Mid-Market</td>
+            <td><span class="disc disc-mid">48.7%</span><span class="deal-count">83 deals</span></td>
+            <td><span class="disc disc-mid">52.3%</span><span class="deal-count">183 deals</span></td>
+            <td><span class="disc disc-mid">42.5%</span><span class="deal-count">65 deals</span></td>
+            <td><span class="disc disc-low">31.8%</span><span class="deal-count">15 deals</span></td>
+            <td><span class="trend-down">▼ 6.2 pts</span></td>
+          </tr>
+          <tr class="total-row">
+            <td>▸ Total (LE + ME)</td>
+            <td>66.2% <span class="deal-count">174 deals</span></td>
+            <td>72.3% <span class="deal-count">382 deals</span></td>
+            <td>57.4% <span class="deal-count">147 deals</span></td>
+            <td>81.0% <span class="deal-count">35 deals</span> ⚠</td>
+            <td><span class="trend-down">▼ 8.8 pts</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="table-wrap">
+      <div class="table-cap"><span class="dot" style="background:var(--wd-orange)"></span>2b — Add-on Deals with AI Products ONLY (AI_ONLY = TRUE)</div>
+      <table>
+        <thead>
+          <tr><th>Segment</th><th>Q3 FY26</th><th>Q4 FY26</th><th>Q1 FY27</th><th>Q2 FY27*</th><th>Trend Q3 → Q1</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>LE – Large Enterprise</td>
+            <td><span class="disc disc-vhigh">78.8%</span><span class="deal-count">29 deals</span></td>
+            <td><span class="disc disc-high">68.3%</span><span class="deal-count">34 deals</span></td>
+            <td><span class="disc disc-mid">46.4%</span><span class="deal-count">15 deals</span></td>
+            <td><span class="disc disc-vhigh">96.7%</span><span class="deal-count">10 deals</span> ⚠</td>
+            <td><span class="trend-down">▼ 32.4 pts</span></td>
+          </tr>
+          <tr>
+            <td>ME – Mid-Market</td>
+            <td><span class="disc disc-mid">49.7%</span><span class="deal-count">17 deals</span></td>
+            <td><span class="disc disc-mid">46.2%</span><span class="deal-count">49 deals</span></td>
+            <td><span class="disc disc-mid">51.7%</span><span class="deal-count">18 deals</span></td>
+            <td><span class="disc disc-low">16.5%</span><span class="deal-count">2 deals</span></td>
+            <td><span class="trend-up">▲ 2.0 pts</span></td>
+          </tr>
+          <tr class="total-row">
+            <td>▸ Total (LE + ME)</td>
+            <td>74.7% <span class="deal-count">46 deals</span></td>
+            <td>63.8% <span class="deal-count">83 deals</span></td>
+            <td>47.3% <span class="deal-count">33 deals</span></td>
+            <td>95.8% <span class="deal-count">12 deals</span> ⚠</td>
+            <td><span class="trend-down">▼ 27.4 pts</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+
+  <!-- FLEX CREDITS -->
+  <div class="section" id="flex">
+    <div class="section-header">
+      <div class="section-num">3</div>
+      <div>
+        <div class="section-title">Flex Credits — Pricing &amp; Discount Analysis</div>
+        <div class="section-desc">QUANTITY summed across all contract years per deal · FLXCRD-C (complimentary) excluded · Volume tiers: &lt;5M credits total (8¢ floor) vs 5M+ credits total (6¢ floor) · List price: 10¢</div>
+      </div>
+    </div>
+
+    <div class="fc-grid">
+      <div class="fc-tile">
+        <div class="fc-tile-head">
+          2H FY26 (Q3 + Q4 Combined)
+          <span class="period-badge">44 deals</span>
+        </div>
+        <div class="fc-row">
+          <div>
+            <div class="fc-tier-label">Below 5M Credits</div>
+            <div class="fc-tier-sub">8¢ floor · 37 deals</div>
+          </div>
+          <div class="fc-nums">
+            <div class="fc-cents" style="color:var(--amber)">6.73¢</div>
+            <div style="font-size:11px;color:var(--amber);margin-top:2px;font-weight:700;">34.4% avg discount</div>
+          </div>
+        </div>
+        <div class="fc-row" style="background:#FAFCFE">
+          <div>
+            <div class="fc-tier-label">Above 5M Credits</div>
+            <div class="fc-tier-sub">6¢ floor · 10 deals</div>
+          </div>
+          <div class="fc-nums">
+            <div class="fc-cents" style="color:var(--amber)">4.51¢</div>
+            <div style="font-size:11px;color:var(--amber);margin-top:2px;font-weight:700;">48.7% avg discount</div>
+          </div>
+        </div>
+      </div>
+      <div class="fc-tile">
+        <div class="fc-tile-head" style="background:var(--wd-blue)">
+          Q1 FY27
+          <span class="period-badge">40 deals</span>
+        </div>
+        <div class="fc-row">
+          <div>
+            <div class="fc-tier-label">Below 5M Credits</div>
+            <div class="fc-tier-sub">8¢ floor · 41 deals</div>
+          </div>
+          <div class="fc-nums">
+            <div class="fc-cents" style="color:var(--green)">9.00¢</div>
+            <div style="font-size:11px;color:var(--green);margin-top:2px;font-weight:700;">12.8% avg discount</div>
+          </div>
+        </div>
+        <div class="fc-row" style="background:#FAFCFE">
+          <div>
+            <div class="fc-tier-label">Above 5M Credits</div>
+            <div class="fc-tier-sub">6¢ floor · 4 deals</div>
+          </div>
+          <div class="fc-nums">
+            <div class="fc-cents" style="color:var(--amber)">7.82¢</div>
+            <div style="font-size:11px;color:var(--amber);margin-top:2px;font-weight:700;">24.6% avg discount</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <div class="table-cap"><span class="dot" style="background:var(--wd-teal)"></span>Flex Credits — 2H FY26 vs. Q1 FY27 Movement Summary</div>
+      <table>
+        <thead>
+          <tr><th>Volume Tier</th><th>Floor</th><th>2H FY26 Avg ¢</th><th>Q1 FY27 Avg ¢</th><th>¢ Change</th><th>2H Disc%</th><th>Q1 Disc%</th><th>Disc Delta</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Below 5M Credits</td>
+            <td>8¢</td>
+            <td>6.73¢</td>
+            <td>9.00¢</td>
+            <td><span class="trend-down">▲ +2.27¢</span></td>
+            <td><span class="disc disc-mid">34.4%</span></td>
+            <td><span class="disc disc-low">12.8%</span></td>
+            <td><span class="trend-down">▼ 21.6 pts</span></td>
+          </tr>
+          <tr>
+            <td>Above 5M Credits</td>
+            <td>6¢</td>
+            <td>4.51¢</td>
+            <td>7.82¢</td>
+            <td><span class="trend-down">▲ +3.31¢</span></td>
+            <td><span class="disc disc-high">48.7%</span></td>
+            <td><span class="disc disc-mid">24.6%</span></td>
+            <td><span class="trend-down">▼ 24.1 pts</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- HIREDSCORE &amp; EVISORT -->
+  <div class="section" id="hiredscore">
+    <div class="section-header">
+      <div class="section-num">4</div>
+      <div>
+        <div class="section-title">HiredScore &amp; Evisort — Old SKU vs. New SKU</div>
+        <div class="section-desc">Discount trend across FY25, FY26 (full year), and Q1 FY27. Product Classification column (M) in AI SKUs tab.</div>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <div class="table-cap"><span class="dot" style="background:var(--wd-orange)"></span>HiredScore — Old SKU vs. New SKU Discount Comparison</div>
+      <table>
+        <thead>
+          <tr><th>SKU</th><th>FY25 Avg Disc</th><th>FY25 Deals</th><th>FY26 Avg Disc</th><th>FY26 Deals</th><th>Q1 FY27 Avg Disc</th><th>Q1 FY27 Deals</th><th>FY26 → Q1 Delta</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>HiredScore (Old SKU)</td>
+            <td style="color:var(--wd-muted);">—</td>
+            <td style="color:var(--wd-muted);">—</td>
+            <td><span class="disc disc-high">61.5%</span></td>
+            <td>296</td>
+            <td><span class="disc disc-high">62.8%</span></td>
+            <td>22</td>
+            <td><span class="trend-up">▲ 1.3 pts</span></td>
+          </tr>
+          <tr>
+            <td>HiredScore (New SKU)</td>
+            <td style="color:var(--wd-muted);">—</td>
+            <td style="color:var(--wd-muted);">—</td>
+            <td style="color:var(--wd-muted);">—</td>
+            <td style="color:var(--wd-muted);">—</td>
+            <td><span class="disc disc-mid">55.0%</span></td>
+            <td>18</td>
+            <td style="color:var(--wd-muted); font-size:11px;">New motion FY27 only</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="table-wrap">
+      <div class="table-cap"><span class="dot" style="background:var(--wd-teal)"></span>Evisort — Old SKU vs. New SKU Discount Comparison</div>
+      <table>
+        <thead>
+          <tr><th>SKU</th><th>FY25 Avg Disc</th><th>FY25 Deals</th><th>FY26 Avg Disc</th><th>FY26 Deals</th><th>Q1 FY27 Avg Disc</th><th>Q1 FY27 Deals</th><th>FY26 → Q1 Delta</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Evisort (Old SKU)</td>
+            <td style="color:var(--wd-muted);">—</td>
+            <td style="color:var(--wd-muted);">—</td>
+            <td><span class="disc disc-vhigh">71.5%</span></td>
+            <td>402</td>
+            <td><span class="disc disc-high">55.5%</span></td>
+            <td>39</td>
+            <td><span class="trend-down">▼ 16.0 pts</span></td>
+          </tr>
+          <tr>
+            <td>Evisort (New SKU)</td>
+            <td style="color:var(--wd-muted);">—</td>
+            <td style="color:var(--wd-muted);">—</td>
+            <td style="color:var(--wd-muted);">—</td>
+            <td style="color:var(--wd-muted);">—</td>
+            <td><span class="disc disc-high">63.7%</span></td>
+            <td>17</td>
+            <td style="color:var(--wd-muted); font-size:11px;">New motion FY27 only</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout-grid">
+      <div class="callout insight">
+        <div class="callout-title">HiredScore Observation</div>
+        <div class="callout-body">The Old SKU has been remarkably stable at ~45–50% discount across FY25, FY26, and Q1 FY27 — the pricing motion here is established and predictable. The New SKU's commercial motion began in FY27; Q1 FY27's <strong>48.2% across 18 deals</strong> is the true opening baseline. It's notable that it already lands close to Old SKU parity — the key question going forward is whether the New SKU can establish a premium above that level as adoption grows.</div>
+      </div>
+      <div class="callout positive">
+        <div class="callout-title">Evisort Observation</div>
+        <div class="callout-body">Evisort Old SKU improved dramatically — <strong>56.2% (FY26, 478 deals) → 32.0% (Q1 FY27, 43 deals)</strong>, a 24-point drop on a large, statistically reliable sample. This is the strongest pricing improvement signal in the dataset. The Evisort New SKU commercial motion started in FY27; Q1 FY27's <strong>59.3% across 17 deals</strong> is its clean opening baseline. It currently runs ~27 points above the Old SKU's Q1 level, which warrants monitoring — though early deal counts mean this will likely normalize as volume increases.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- METHODOLOGY -->
+  <div class="section" id="methodology">
+    <div class="section-header">
+      <div class="section-num" style="background:var(--wd-muted)">M</div>
+      <div>
+        <div class="section-title">Methodology &amp; Data Notes</div>
+        <div class="section-desc">How this analysis was constructed, key assumptions, and known limitations</div>
+      </div>
+    </div>
+
+    <div class="method-grid">
+      <div class="method-card">
+        <h4><span>1</span>Data Sources</h4>
+        <ul>
+          <li><strong>AI SKUs tab</strong> — 9,911 rows covering FY25-Q1 through FY27-Q2; used for Sections 1, 2, and 4</li>
+          <li><strong>Flex Credits Only tab</strong> — 544 rows, Q3 FY26 through Q2 FY27; used for Section 3</li>
+          <li>Source file: 05-29-26 AI Product Pricing.xlsx provided by Finance</li>
+        </ul>
+      </div>
+      <div class="method-card">
+        <h4><span>2</span>Discount Calculation</h4>
+        <ul>
+          <li><strong>Formula:</strong> Discount % = 1 − SUM(ACV_USD) ÷ SUM(LIST_ACV_USD) — ACV-weighted aggregate per cohort (aligns with Joyce's methodology)</li>
+          <li>Uses Columns I (ACV) and J (List ACV) per YT guidance</li>
+          <li>Rows with LIST_ACV_USD = 0 or null excluded to prevent division errors</li>
+          <li>ACV-weighted: larger deals have proportionally more influence on the discount %. This reflects aggregate revenue impact rather than a simple average of deal-level discounts</li>
+        </ul>
+      </div>
+      <div class="method-card">
+        <h4><span>3</span>Exclusions Applied</h4>
+        <ul>
+          <li>Growth Event sub-type (OPPORTUNITY_SUB_TYPE = "Growth Event") excluded — per Joyce's methodology</li>
+          <li>Rows where LIST_ACV_USD = 0 or null excluded to prevent division errors</li>
+          <li>Rows where ACV_USD is null excluded</li>
+          <li>Renewals excluded from all sections</li>
+          <li>285 rows excluded from AI SKUs (rows where ACV_USD is null — these are sub-period line items, not deal summaries); analysis is at deal level using NAME as the unique deal key</li>
+          <li>For Flex Credits: FLXCRD-C (complimentary product code) excluded entirely</li>
+        </ul>
+      </div>
+      <div class="method-card">
+        <h4><span>4</span>Segment Definitions</h4>
+        <ul>
+          <li><strong>LE (Large Enterprise):</strong> Column D = "LE"</li>
+          <li><strong>ME (Mid-Market):</strong> Column D = "ME"</li>
+          <li><strong>AI-Only Add-on:</strong> Column A (AI_ONLY) = TRUE + Opportunity Type = Add-on Subscription</li>
+          <li><strong>Mixed Add-on:</strong> Column A = FALSE + Add-on Subscription</li>
+          <li>Renewals excluded from all sections per standard reporting practice</li>
+        </ul>
+      </div>
+      <div class="method-card">
+        <h4><span>5</span>Flex Credits Methodology</h4>
+        <ul>
+          <li>QUANTITY and price summed across ALL contract year rows per deal (APTS_PERIODNUMBER__C not filtered) — total credits purchased = sum of all years in the contract</li>
+          <li>Price per credit = TOTAL_DISCOUNTED_PRICE_USD ÷ QUANTITY × 100 (in cents)</li>
+          <li><strong>2H FY26</strong> = Q3 FY26 + Q4 FY26 combined per request framing</li>
+          <li>Volume tier cutoff: 5,000,000 credits — below = 8¢ floor; above = 6¢ floor; list price = 10¢</li>
+        </ul>
+      </div>
+      <div class="method-card">
+        <h4><span>6</span>Limitations &amp; Caveats</h4>
+        <ul>
+          <li>Q2 FY27 deal counts are very low (12 Net New, 41 Add-on) — directional only, do not use for decisions</li>
+          <li>HiredScore New and Evisort New SKU FY26 deals excluded — new commercial motion began in FY27; FY26 appearances were old-motion deals</li>
+          <li>Discount averages are not ACV-weighted; a $10K and $10M deal count equally</li>
+          <li>Currency conversion for non-USD deals uses FX_RATE column; may not reflect current rates</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ANALYST SCRIPT -->
+  <div class="section" id="analyst-script">
+    <div class="section-header">
+      <div class="section-num" style="background:#4B5563;font-size:11px;">AS</div>
+      <div>
+        <div class="section-title">Analyst Script</div>
+        <div class="section-desc">Context, assumptions, and decisions needed to fully reproduce this analysis from scratch</div>
+      </div>
+    </div>
+
+    <div style="background:white;border:1px solid var(--wd-border);border-radius:8px;overflow:hidden;margin-bottom:16px;">
+      <div style="background:#1F2937;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;">
+        <span style="color:#9CA3AF;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;font-family:'Archivo',sans-serif;">Source File</span>
+        <span style="color:#34D399;font-size:12px;font-weight:600;font-family:'Archivo',sans-serif;">05-29-26_AI_Product_Pricing.xlsx</span>
+      </div>
+      <div style="padding:0;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid var(--wd-mid);">
+          <div style="padding:16px 20px;border-right:1px solid var(--wd-mid);">
+            <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.7px;color:var(--wd-muted);margin-bottom:8px;">Tab 1 — AI SKUs</div>
+            <div style="font-size:13px;color:var(--wd-text);line-height:1.7;">
+              9,911 rows · FY25-Q1 through FY27-Q2<br>
+              Used for: Sections 1, 2, and 4<br><br>
+              <strong>Key columns:</strong><br>
+              A — AI_ONLY (TRUE/FALSE)<br>
+              D — EMPLOYEE_RANGE_GROUP (LE / ME)<br>
+              F — OPPORTUNITY_TYPE<br>
+              H — OPPORTUNITY_AMOUNT_USD <em style="color:var(--wd-muted)">(concession flag: exclude if = 0)</em><br>
+              I — ACV_USD <em style="color:var(--wd-muted)">(numerator of discount)</em><br>
+              J — LIST_ACV_USD <em style="color:var(--wd-muted)">(denominator; exclude if = 0 or null)</em><br>
+              M — Product Classification YT
+            </div>
+          </div>
+          <div style="padding:16px 20px;">
+            <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.7px;color:var(--wd-muted);margin-bottom:8px;">Tab 2 — Flex Credits Only</div>
+            <div style="font-size:13px;color:var(--wd-text);line-height:1.7;">
+              544 rows · Q3 FY26 through Q2 FY27<br>
+              Used for: Section 3 only<br><br>
+              <strong>Key columns:</strong><br>
+              PRODUCT_CODE__C — keep FLXCRD only; exclude FLXCRD-C<br>
+              APTS_PERIODNUMBER__C — keep Year 1 rows only (= 1)<br>
+              QUANTITY — credits sold<br>
+              TOTAL_DISCOUNTED_PRICE_USD — sold price<br>
+              TOTAL_LIST_PRICE_USD — list price<br>
+              OPPORTUNITY_CLOSE_DATE_FISCAL_PERIOD — period filter<br>
+              OPPORTUNITY_TYPE — Net New / Add-on / Renewal<br>
+              <em style="color:var(--wd-muted);">Volume tiers: &lt;5M credits = 8¢ floor; 5M+ = 6¢ floor; list = 10¢</em>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+      <div style="background:white;border:1px solid var(--wd-border);border-radius:8px;padding:20px;">
+        <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.7px;color:var(--wd-muted);margin-bottom:12px;">Core Formulas</div>
+        <div style="background:#F8FAFC;border:1px solid var(--wd-mid);border-radius:6px;padding:14px;font-family:monospace;font-size:12.5px;line-height:2;color:#1A2C3D;">
+          <span style="color:#6366F1;">Discount %</span> = 1 − SUM(ACV_USD) ÷ SUM(LIST_ACV_USD)  <em style="color:#9CA3AF;">[ACV-weighted per cohort — Joyce's formula]</em><br>
+          <span style="color:#6366F1;">¢ per Credit</span> = (TOTAL_DISCOUNTED_PRICE_USD ÷ QUANTITY) × 100<br>
+          <span style="color:#6366F1;">FC Discount %</span> = 1 − (TOTAL_DISCOUNTED_PRICE_USD ÷ TOTAL_LIST_PRICE_USD)
+        </div>
+      </div>
+      <div style="background:white;border:1px solid var(--wd-border);border-radius:8px;padding:20px;">
+        <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.7px;color:var(--wd-muted);margin-bottom:12px;">Period Mapping</div>
+        <table style="width:100%;font-size:12.5px;border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th style="background:var(--wd-navy);color:white;padding:7px 10px;text-align:left;font-weight:700;font-size:11px;">Raw Period Value</th>
+              <th style="background:var(--wd-navy);color:white;padding:7px 10px;text-align:left;font-weight:700;font-size:11px;">Report Label</th>
+              <th style="background:var(--wd-navy);color:white;padding:7px 10px;text-align:left;font-weight:700;font-size:11px;">Used In</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="border-bottom:1px solid var(--wd-mid);">
+              <td style="padding:7px 10px;font-family:monospace;">2026-Q3</td>
+              <td style="padding:7px 10px;">Q3 FY26 · 2H FY26</td>
+              <td style="padding:7px 10px;color:var(--wd-muted);">S1, S2, S3</td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--wd-mid);background:#FAFCFE;">
+              <td style="padding:7px 10px;font-family:monospace;">2026-Q4</td>
+              <td style="padding:7px 10px;">Q4 FY26 · 2H FY26</td>
+              <td style="padding:7px 10px;color:var(--wd-muted);">S1, S2, S3</td>
+            </tr>
+            <tr style="border-bottom:1px solid var(--wd-mid);">
+              <td style="padding:7px 10px;font-family:monospace;">2027-Q1</td>
+              <td style="padding:7px 10px;">Q1 FY27</td>
+              <td style="padding:7px 10px;color:var(--wd-muted);">S1, S2, S3, S4</td>
+            </tr>
+            <tr>
+              <td style="padding:7px 10px;font-family:monospace;">2027-Q2</td>
+              <td style="padding:7px 10px;">Q2 FY27 ⚠ partial</td>
+              <td style="padding:7px 10px;color:var(--wd-muted);">S1, S2 only</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:16px;">
+      <div style="background:white;border:1px solid var(--wd-border);border-radius:8px;padding:20px;">
+        <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.7px;color:var(--wd-muted);margin-bottom:10px;">Filters Applied — AI SKUs</div>
+        <ul style="list-style:none;font-size:13px;color:var(--wd-text);line-height:1.8;">
+          <li style="display:flex;gap:8px;padding:4px 0;border-bottom:1px solid var(--wd-light);"><span style="color:var(--wd-teal);font-weight:700;">→</span> <strong>Deduplicate to deal level:</strong> group by NAME; sum ACV_USD and LIST_ACV_USD per deal before computing discount</li>
+          <li style="display:flex;gap:8px;padding:4px 0;border-bottom:1px solid var(--wd-light);"><span style="color:var(--red);font-weight:700;">✕</span> Rows where ACV_USD is null (285 rows — sub-period line items with no ACV data)</li>
+          <li style="display:flex;gap:8px;padding:4px 0;border-bottom:1px solid var(--wd-light);"><span style="color:var(--red);font-weight:700;">✕</span> LIST_ACV_USD is null or = 0</li>
+          <li style="display:flex;gap:8px;padding:4px 0;border-bottom:1px solid var(--wd-light);"><span style="color:var(--red);font-weight:700;">✕</span> OPPORTUNITY_TYPE = "Renewal"</li>
+          <li style="display:flex;gap:8px;padding:4px 0;border-bottom:1px solid var(--wd-light);"><span style="color:var(--red);font-weight:700;">✕</span> Periods outside Q3 FY26–Q2 FY27</li>
+          <li style="display:flex;gap:8px;padding:4px 0;"><span style="color:#6366F1;font-weight:700;">!</span> Flex Credits tab NOT used for AI SKU sections — tabs analyzed independently</li>
+        </ul>
+      </div>
+      <div style="background:white;border:1px solid var(--wd-border);border-radius:8px;padding:20px;">
+        <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.7px;color:var(--wd-muted);margin-bottom:10px;">Filters Applied — Flex Credits</div>
+        <ul style="list-style:none;font-size:13px;color:var(--wd-text);line-height:1.8;">
+          <li style="display:flex;gap:8px;padding:4px 0;border-bottom:1px solid var(--wd-light);"><span style="color:var(--red);font-weight:700;">✕</span> PRODUCT_CODE__C = "FLXCRD-C" (complimentary)</li>
+          <li style="display:flex;gap:8px;padding:4px 0;border-bottom:1px solid var(--wd-light);"><span style="color:var(--wd-teal);font-weight:700;">→</span> <strong>Sum ALL period rows per deal</strong> — QUANTITY, TOTAL_DISCOUNTED_PRICE_USD, TOTAL_LIST_PRICE_USD summed across all APTS_PERIODNUMBER__C values to get total contract credits</li>
+          <li style="display:flex;gap:8px;padding:4px 0;border-bottom:1px solid var(--wd-light);"><span style="color:var(--red);font-weight:700;">✕</span> QUANTITY = 0</li>
+          <li style="display:flex;gap:8px;padding:4px 0;border-bottom:1px solid var(--wd-light);"><span style="color:var(--red);font-weight:700;">✕</span> TOTAL_DISCOUNTED_PRICE_USD = 0</li>
+          <li style="display:flex;gap:8px;padding:4px 0;"><span style="color:var(--red);font-weight:700;">✕</span> TOTAL_LIST_PRICE_USD = 0</li>
+        </ul>
+      </div>
+      <div style="background:white;border:1px solid var(--wd-border);border-radius:8px;padding:20px;">
+        <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.7px;color:var(--wd-muted);margin-bottom:10px;">HiredScore &amp; Evisort Rules</div>
+        <ul style="list-style:none;font-size:13px;color:var(--wd-text);line-height:1.8;">
+          <li style="display:flex;gap:8px;padding:4px 0;border-bottom:1px solid var(--wd-light);"><span style="color:var(--wd-teal);font-weight:700;">→</span> Source: Column M (Product Classification YT)</li>
+          <li style="display:flex;gap:8px;padding:4px 0;border-bottom:1px solid var(--wd-light);"><span style="color:var(--wd-teal);font-weight:700;">→</span> Values: "HiredScore Old", "HiredScore New", "Evisort Old", "Evisort New"</li>
+          <li style="display:flex;gap:8px;padding:4px 0;border-bottom:1px solid var(--wd-light);"><span style="color:var(--red);font-weight:700;">✕</span> New SKU FY26 deals excluded — new motion started FY27 only</li>
+          <li style="display:flex;gap:8px;padding:4px 0;"><span style="color:var(--wd-teal);font-weight:700;">→</span> "Last Year" for Old SKUs = all 2026-Q* periods combined</li>
+        </ul>
+      </div>
+    </div>
+
+    <div style="background:white;border:1px solid var(--wd-border);border-radius:8px;padding:20px;">
+      <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.7px;color:var(--wd-muted);margin-bottom:12px;">Report Structure &amp; Decisions Made</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;font-size:13px;color:var(--wd-text);line-height:1.75;">
+        <div>
+          <strong style="display:block;margin-bottom:4px;color:var(--wd-navy);">Sections in this report:</strong>
+          <div style="color:var(--wd-muted);">
+            Exec Summary → KPI cards + 4 callouts<br>
+            S1 — Net New (LE / ME / Total + breakdown by AI alongside Core)<br>
+            <em style="color:var(--wd-muted);">Note: AI_ONLY = TRUE does not apply to Net New — all NN deals require Core HCM / FIN</em><br>
+            S2a — All Add-on (LE / ME / Total)<br>
+            S2b — AI-Only Add-on (LE / ME / Total)<br>
+            <del>S2c — Mixed Add-on (removed per request)</del><br>
+            S3 — Flex Credits (&lt;1M vs ≥1M credits)<br>
+            S4 — HiredScore &amp; Evisort (Old vs New SKU)<br>
+            Methodology · Analyst Script
+          </div>
+        </div>
+        <div>
+          <strong style="display:block;margin-bottom:4px;color:var(--wd-navy);">Key judgment calls to know:</strong>
+          <div style="color:var(--wd-muted);">
+            · ACV-weighted: larger deals have proportionally more influence on the discount %. This reflects aggregate revenue impact rather than a simple average of deal-level discounts<br>
+            · Flex Credit volume tier: QUANTITY summed across all contract years per deal; split at 5M total credits (8¢ floor below / 6¢ floor above); list price 10¢<br>
+            · 2H FY26 = Q3 + Q4 combined for Flex Credits section<br>
+            · Q2 FY27 included in tables but flagged as partial / low-count<br>
+            · New SKU (HS + Evisort) FY26 data excluded — old motion<br>
+            · Renewals excluded from all sections<br>
+            · Discount formula: ACV-weighted (1 − SUM(ACV)/SUM(LIST_ACV) per cohort), not a simple average — aligns to Joyce's methodology
+            · 285 rows excluded where ACV_USD is null (sub-period line items with no ACV data)
+            · Flex Credits tab NOT used in AI SKU sections — each tab analyzed independently
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="report-footer">
+    <div class="footer-left">
+      <strong>P&amp;T and Sales Finance</strong> · AI Pricing Review · Confidential<br>
+      Prepared June 2026 · For internal distribution only
+    </div>
+    <div class="footer-right">
+      Source: 05-29-26 AI Product Pricing.xlsx<br>
+      Questions: P&amp;T and Sales Finance Team
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
