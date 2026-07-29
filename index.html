@@ -1,558 +1,511 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Deal Score Dashboard</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #f0f2f5;
-            color: #1a1a2e;
-        }
-
-        /* ── Header ── */
-        .header {
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-            color: white;
-            padding: 22px 32px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-        .header h1 { font-size: 22px; font-weight: 700; letter-spacing: -0.4px; }
-        .header .subtitle { font-size: 12px; color: rgba(255,255,255,0.55); margin-top: 4px; }
-        .header .org { font-size: 12px; color: rgba(255,255,255,0.4); }
-
-        /* ── Content ── */
-        .content { padding: 24px 32px; }
-
-        /* ── Summary cards ── */
-        .summary-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 14px;
-            margin-bottom: 20px;
-        }
-        .summary-card {
-            background: white;
-            border-radius: 12px;
-            padding: 18px 20px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.07);
-            display: flex;
-            align-items: center;
-            gap: 14px;
-        }
-        .summary-icon {
-            width: 46px; height: 46px;
-            border-radius: 11px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 20px; flex-shrink: 0;
-        }
-        .summary-card.total  .summary-icon { background: #e8eaf6; }
-        .summary-card.green  .summary-icon { background: #dcfce7; }
-        .summary-card.yellow .summary-icon { background: #fef9c3; }
-        .summary-card.red    .summary-icon { background: #fee2e2; }
-        .summary-label { font-size: 12px; color: #6b7280; margin-bottom: 3px; }
-        .summary-count { font-size: 28px; font-weight: 800; line-height: 1; }
-        .summary-card.total  .summary-count { color: #3730a3; }
-        .summary-card.green  .summary-count { color: #16a34a; }
-        .summary-card.yellow .summary-count { color: #b45309; }
-        .summary-card.red    .summary-count { color: #dc2626; }
-
-        /* ── Filters ── */
-        .filters {
-            background: white;
-            border-radius: 12px;
-            padding: 14px 20px;
-            margin-bottom: 18px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.07);
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            flex-wrap: wrap;
-        }
-        .filter-label { font-size: 12px; font-weight: 700; color: #374151; white-space: nowrap; }
-        .filters select {
-            padding: 7px 11px;
-            border: 1px solid #e5e7eb;
-            border-radius: 8px;
-            font-size: 12px;
-            color: #374151;
-            background: #f9fafb;
-            cursor: pointer;
-            outline: none;
-        }
-        .filters select:focus { border-color: #6366f1; box-shadow: 0 0 0 2px rgba(99,102,241,0.15); }
-        .score-filter { display: flex; gap: 6px; }
-        .score-btn {
-            padding: 5px 13px;
-            border-radius: 20px;
-            border: 2px solid transparent;
-            font-size: 11px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.15s;
-            letter-spacing: 0.2px;
-        }
-        .score-btn.all    { background: #f3f4f6; color: #374151; border-color: #d1d5db; }
-        .score-btn.green  { background: #dcfce7; color: #16a34a; border-color: #86efac; }
-        .score-btn.yellow { background: #fef9c3; color: #854d0e; border-color: #fde047; }
-        .score-btn.red    { background: #fee2e2; color: #dc2626; border-color: #fca5a5; }
-        .score-btn.active.all    { background: #374151; color: white; border-color: #374151; }
-        .score-btn.active.green  { background: #16a34a; color: white; border-color: #16a34a; }
-        .score-btn.active.yellow { background: #ca8a04; color: white; border-color: #ca8a04; }
-        .score-btn.active.red    { background: #dc2626; color: white; border-color: #dc2626; }
-
-        /* ── Table wrapper ── */
-        .table-wrapper {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.07);
-            overflow-x: auto;
-        }
-        .table-topbar {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 14px 20px;
-            border-bottom: 1px solid #f3f4f6;
-        }
-        .table-title { font-size: 14px; font-weight: 700; color: #111827; }
-        .showing-text { font-size: 12px; color: #9ca3af; }
-
-        /* ── Legend ── */
-        .legend {
-            display: flex;
-            gap: 16px;
-            align-items: center;
-        }
-        .legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: #6b7280; }
-        .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
-        .legend-dot.high   { background: #22c55e; }
-        .legend-dot.mid    { background: #eab308; }
-        .legend-dot.low    { background: #ef4444; }
-
-        /* ── Table ── */
-        table { width: 100%; border-collapse: collapse; }
-
-        thead th {
-            background: #f8fafc;
-            padding: 9px 12px;
-            text-align: left;
-            font-size: 10px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: #6b7280;
-            border-bottom: 1px solid #e5e7eb;
-            white-space: nowrap;
-        }
-        .th-center { text-align: center; }
-        .th-right  { text-align: right; }
-
-        .metrics-header  { background: #eef2ff !important; }
-        .pct-header      { background: #f0fdf4 !important; }
-        .metrics-border-l { border-left: 2px solid #c7d2fe !important; }
-        .metrics-border-r { border-right: 2px solid #c7d2fe !important; }
-        .pct-border-l     { border-left: 2px solid #a7f3d0 !important; }
-        .pct-border-r     { border-right: 2px solid #a7f3d0 !important; }
-
-        tbody tr:hover { background: #fafbfc; }
-        tbody tr:not(:last-child) td { border-bottom: 1px solid #f3f4f6; }
-
-        td {
-            padding: 11px 12px;
-            font-size: 12px;
-            color: #374151;
-            vertical-align: middle;
-        }
-        .td-name {
-            font-weight: 600;
-            color: #111827;
-            font-size: 13px;
-            max-width: 200px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        .td-sub { font-size: 11px; color: #9ca3af; margin-top: 2px; white-space: nowrap; }
-        .td-right { text-align: right; font-variant-numeric: tabular-nums; }
-        .td-center { text-align: center; }
-
-        /* Tags */
-        .tag {
-            display: inline-block;
-            padding: 2px 7px;
-            border-radius: 4px;
-            font-size: 10px;
-            font-weight: 600;
-            letter-spacing: 0.2px;
-            white-space: nowrap;
-        }
-        .tag.net-new   { background: #ede9fe; color: #7c3aed; }
-        .tag.expansion { background: #dbeafe; color: #1d4ed8; }
-        .tag.acv       { background: #f1f5f9; color: #64748b; }
-
-        /* Percentile bar */
-        .pct-wrap {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            justify-content: flex-end;
-        }
-        .pct-bar {
-            width: 44px; height: 5px;
-            background: #e5e7eb;
-            border-radius: 3px;
-            overflow: hidden;
-            flex-shrink: 0;
-        }
-        .pct-fill { height: 100%; border-radius: 3px; }
-        .pct-fill.high { background: #22c55e; }
-        .pct-fill.mid  { background: #eab308; }
-        .pct-fill.low  { background: #ef4444; }
-        .pct-val { font-size: 11px; font-weight: 700; min-width: 32px; text-align: right; }
-        .pct-val.high { color: #15803d; }
-        .pct-val.mid  { color: #92400e; }
-        .pct-val.low  { color: #dc2626; }
-
-        /* Score badge */
-        .score-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            padding: 4px 11px;
-            border-radius: 20px;
-            font-size: 11px;
-            font-weight: 700;
-            letter-spacing: 0.3px;
-            white-space: nowrap;
-        }
-        .score-badge.green  { background: #dcfce7; color: #16a34a; }
-        .score-badge.yellow { background: #fef9c3; color: #854d0e; }
-        .score-badge.red    { background: #fee2e2; color: #dc2626; }
-        .score-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
-        .score-badge.green  .score-dot { background: #16a34a; }
-        .score-badge.yellow .score-dot { background: #ca8a04; }
-        .score-badge.red    .score-dot { background: #dc2626; }
-
-        /* Empty state */
-        .empty-state {
-            text-align: center;
-            padding: 48px;
-            color: #9ca3af;
-            font-size: 13px;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FY27 SSR & Renewal Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink: #0F2E66;
+      --after-hours: #022043;
+      --ballpoint: #0057AE;
+      --water-cooler: #1C98E8;
+      --blue-sky: #9ECFFF;
+      --paper: #FFFFFF;
+      --keyboard: #FCF8E8;
+      --highlighter: #FFF3A8;
+      --thumbtack: #FC5B05;
+      --border: #D8E4F0;
+      --muted: #5A6B85;
+      --success: #0A7B4A;
+      --radius: 16px;
+      --shadow: 0 4px 24px rgba(15, 46, 102, 0.08);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: 'Archivo', 'Segoe UI', sans-serif;
+      background: linear-gradient(160deg, var(--keyboard) 0%, #f4f8fc 45%, #eef4fb 100%);
+      color: var(--ink);
+      line-height: 1.5;
+      min-height: 100vh;
+    }
+    .page { max-width: 1400px; margin: 0 auto; padding: 32px 24px 48px; }
+    .hero {
+      background: linear-gradient(135deg, var(--after-hours) 0%, var(--ink) 55%, var(--ballpoint) 100%);
+      color: var(--paper);
+      border-radius: 24px;
+      padding: 32px 36px;
+      box-shadow: var(--shadow);
+      margin-bottom: 20px;
+    }
+    .hero h1 { margin: 0 0 8px; font-size: 2rem; font-weight: 700; letter-spacing: -0.02em; }
+    .hero p { margin: 0; color: var(--blue-sky); font-size: 1rem; max-width: 720px; }
+    .eyebrow {
+      display: inline-block;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--highlighter);
+      margin-bottom: 10px;
+    }
+    .filter-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .filter-label {
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--muted);
+      min-width: 72px;
+    }
+    .pill-tabs {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .pill-tab {
+      padding: 10px 20px;
+      border-radius: 999px;
+      border: 2px solid var(--border);
+      background: var(--paper);
+      color: var(--ink);
+      font-family: inherit;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: var(--shadow);
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
+    }
+    .pill-tab:hover {
+      border-color: var(--water-cooler);
+      color: var(--ballpoint);
+    }
+    .pill-tab.active {
+      background: var(--ink);
+      border-color: var(--ink);
+      color: var(--paper);
+    }
+    .pill-tab.segment.active {
+      background: var(--ballpoint);
+      border-color: var(--ballpoint);
+    }
+    .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 28px; }
+    .card {
+      background: var(--paper);
+      border-radius: var(--radius);
+      padding: 24px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+    }
+    .card-label { font-size: 0.85rem; color: var(--muted); font-weight: 600; margin-bottom: 8px; }
+    .card-value { font-size: 2rem; font-weight: 700; color: var(--ink); letter-spacing: -0.02em; }
+    .card-value.accent { color: var(--ballpoint); }
+    .card-value.orange { color: var(--thumbtack); }
+    .section {
+      background: var(--paper);
+      border-radius: 24px;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    .section-header {
+      padding: 24px 28px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .section-header h2 { margin: 0; font-size: 1.25rem; font-weight: 700; }
+    .section-header .meta { font-size: 0.875rem; color: var(--muted); }
+    .filters-note {
+      padding: 12px 28px;
+      background: #f7fbff;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.875rem;
+      color: var(--muted);
+    }
+    .filters-note strong { color: var(--ink); }
+    table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+    thead th {
+      text-align: left;
+      padding: 14px 20px;
+      background: #f4f8fc;
+      color: var(--muted);
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      border-bottom: 1px solid var(--border);
+    }
+    thead th.num { text-align: right; }
+    tbody td { padding: 16px 20px; border-bottom: 1px solid var(--border); vertical-align: top; }
+    tbody td.num { text-align: right; }
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr.ssr-row:hover { background: #f9fbfe; }
+    tbody tr.ssr-row.no-row-divider td { border-bottom: none; }
+    tbody tr.ssr-row.pair-group-end td { border-bottom: 1px solid var(--border); }
+    tbody td.merged { vertical-align: middle; background: #fafcfe; }
+    .deal-name { font-weight: 600; color: var(--ink); margin-bottom: 4px; }
+    .deal-sub { font-size: 0.8rem; color: var(--muted); }
+    .badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      background: #eef6ff;
+      color: var(--ink);
+    }
+    .money { font-variant-numeric: tabular-nums; font-weight: 600; }
+    .money.large { font-size: 1rem; }
+    .renewal-name { font-weight: 600; font-size: 0.9rem; margin-bottom: 6px; }
+    .renewal-meta { display: flex; flex-wrap: wrap; gap: 10px; font-size: 0.8rem; color: var(--muted); }
+    .stage-pill {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 6px;
+      background: var(--highlighter);
+      color: var(--after-hours);
+      font-weight: 600;
+      font-size: 0.75rem;
+    }
+    .stage-pill.won { background: #d4f5e4; color: var(--success); }
+    .stage-pill.lost { background: #fde8e8; color: #b42318; }
+    .empty-state {
+      padding: 48px 28px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+    .footer { margin-top: 24px; text-align: center; font-size: 0.8rem; color: var(--muted); }
+    @media (max-width: 900px) {
+      .cards { grid-template-columns: 1fr; }
+      thead { display: none; }
+      table, tbody, tr, td { display: block; width: 100%; }
+      tbody td { padding: 12px 20px; border-bottom: none; text-align: left; }
+      tbody tr.ssr-row { border-bottom: 1px solid var(--border); }
+      tbody td::before {
+        content: attr(data-label);
+        display: block;
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin-bottom: 4px;
+      }
+    }
+  </style>
 </head>
 <body>
+  <div class="page">
+    <header class="hero">
+      <div class="eyebrow">Renewals Analysis</div>
+      <h1 id="hero-title">FY27 Won SSR Deals & Matched Renewals</h1>
+      <p id="hero-desc">Won Supersede and Replace opportunities matched to renewal opportunities in the same fiscal quarter, excluding Stage 50 (Historical Data Only).</p>
+    </header>
 
-<div class="header">
-    <div>
-        <h1>Deal Score Dashboard</h1>
-        <div class="subtitle">Q2-FY27 &nbsp;·&nbsp; Open Opportunities &nbsp;·&nbsp; Last updated Jun 29, 2026</div>
+    <div class="filter-bar">
+      <span class="filter-label">Quarter</span>
+      <nav class="pill-tabs" id="quarter-tabs" aria-label="Fiscal quarter filter"></nav>
     </div>
-    <div class="org">Workday Revenue Operations</div>
-</div>
-
-<div class="content">
-
-    <!-- Summary -->
-    <div class="summary-grid">
-        <div class="summary-card total">
-            <div class="summary-icon">📊</div>
-            <div>
-                <div class="summary-label">Total Deals Shown</div>
-                <div class="summary-count" id="cnt-total">11</div>
-            </div>
-        </div>
-        <div class="summary-card green">
-            <div class="summary-icon">✅</div>
-            <div>
-                <div class="summary-label">On Track (Green)</div>
-                <div class="summary-count" id="cnt-green">2</div>
-            </div>
-        </div>
-        <div class="summary-card yellow">
-            <div class="summary-icon">⚠️</div>
-            <div>
-                <div class="summary-label">At Risk (Yellow)</div>
-                <div class="summary-count" id="cnt-yellow">6</div>
-            </div>
-        </div>
-        <div class="summary-card red">
-            <div class="summary-icon">🚨</div>
-            <div>
-                <div class="summary-label">Critical (Red)</div>
-                <div class="summary-count" id="cnt-red">3</div>
-            </div>
-        </div>
+    <div class="filter-bar">
+      <span class="filter-label">Segment</span>
+      <nav class="pill-tabs" id="segment-tabs" aria-label="Segment filter"></nav>
     </div>
 
-    <!-- Filters -->
-    <div class="filters">
-        <span class="filter-label">Filter by:</span>
-        <select id="f-segment" onchange="applyFilters()">
-            <option value="">All Segments</option>
-            <option value="EMEA">EMEA</option>
-            <option value="North America">North America</option>
-            <option value="APAC">APAC</option>
-        </select>
-        <select id="f-type" onchange="applyFilters()">
-            <option value="">All Types</option>
-            <option value="Net New">Net New</option>
-            <option value="Expansion">Expansion</option>
-        </select>
-        <select id="f-acv" onchange="applyFilters()">
-            <option value="">All ACV Bands</option>
-            <option value="1. <$100K">&lt; $100K</option>
-            <option value="2. $100K–$500K">$100K – $500K</option>
-            <option value="3. $500K+">$500K+</option>
-        </select>
-        <div style="margin-left:auto; display:flex; align-items:center; gap:8px;">
-            <span class="filter-label">Score:</span>
-            <div class="score-filter">
-                <button class="score-btn all active" onclick="setScoreFilter(this,'')">All</button>
-                <button class="score-btn green"  onclick="setScoreFilter(this,'green')">Green</button>
-                <button class="score-btn yellow" onclick="setScoreFilter(this,'yellow')">Yellow</button>
-                <button class="score-btn red"    onclick="setScoreFilter(this,'red')">Red</button>
-            </div>
-        </div>
-    </div>
+    <div class="cards" id="summary-cards"></div>
 
-    <!-- Table -->
-    <div class="table-wrapper">
-        <div class="table-topbar">
-            <div style="display:flex;align-items:center;gap:20px;">
-                <div class="table-title">Open Deals</div>
-                <div class="legend">
-                    <div class="legend-item"><div class="legend-dot high"></div> ≥ 65th pct</div>
-                    <div class="legend-item"><div class="legend-dot mid"></div> 25–64th pct</div>
-                    <div class="legend-item"><div class="legend-dot low"></div> &lt; 25th pct</div>
-                </div>
-            </div>
-            <div class="showing-text" id="showing-text">Showing 11 deals</div>
-        </div>
-        <table>
-            <thead>
-                <tr>
-                    <th rowspan="2">Deal Name</th>
-                    <th rowspan="2">Segment</th>
-                    <th rowspan="2">Group</th>
-                    <th rowspan="2">Type</th>
-                    <th rowspan="2">ACV Band</th>
-                    <!-- Metrics + Percentile combined -->
-                    <th colspan="4" class="th-center metrics-header metrics-border-l metrics-border-r" style="border-bottom:none; padding-bottom:4px;">
-                        — Metric Value &amp; Percentile (trailing 4 quarters) —
-                    </th>
-                    <th rowspan="2" class="th-center">Score</th>
-                </tr>
-                <tr>
-                    <th class="th-right metrics-header metrics-border-l">CPI %<br><span style="font-weight:400;font-size:9px;color:#a5b4fc;">↑ higher better</span></th>
-                    <th class="th-right metrics-header">ACV Ramp<br><span style="font-weight:400;font-size:9px;color:#a5b4fc;">↑ higher better</span></th>
-                    <th class="th-right metrics-header">Gap to Bar<br><span style="font-weight:400;font-size:9px;color:#a5b4fc;">↑ closer 0 better</span></th>
-                    <th class="th-right metrics-header metrics-border-r">Cash Upfront<br><span style="font-weight:400;font-size:9px;color:#a5b4fc;">↑ higher better</span></th>
-                </tr>
-            </thead>
-            <tbody id="deals-tbody"></tbody>
-        </table>
-        <div id="empty-state" class="empty-state" style="display:none;">No deals match the selected filters.</div>
-    </div>
+    <section class="section">
+      <div class="section-header">
+        <h2>Deal Detail</h2>
+        <span class="meta" id="deal-count-meta"></span>
+      </div>
+      <div class="filters-note" id="filters-note"></div>
+      <table>
+        <thead>
+          <tr>
+            <th>SSR Opportunity</th>
+            <th>Segment</th>
+            <th>Group</th>
+            <th class="num">SSR ACV (USD)</th>
+            <th id="renewal-col-header">Matched Renewal</th>
+            <th class="num">Exit Year ACV (USD)</th>
+          </tr>
+        </thead>
+        <tbody id="deals-body"></tbody>
+      </table>
+      <div class="empty-state" id="empty-state" hidden>No deals match the selected filters.</div>
+    </section>
 
-</div>
+    <p class="footer" id="footer-text">Generated from SSRs with Renewals in the Same Quarter data</p>
+  </div>
 
-<script>
-const DEALS = [
-    {
-        name: "Deal 01",
-        group: "EMEA South",
-        segment: "EMEA",
-        type: "Net New",
-        acvBand: "1. <$100K",
-        m: { cpi: "2.00%", acramp: "11.30%", gap: "-66.7", cash: "759%" },
-        p: { cpi: 82, acramp: 95, gap: 9, cash: 95 },
-        score: "yellow"
-    },
-    {
-        name: "Deal 02",
-        group: "US Medium Enterprise DI",
-        segment: "North America",
-        type: "Net New",
-        acvBand: "1. <$100K",
-        m: { cpi: "7.50%", acramp: "3.80%", gap: "-30.9", cash: "96%" },
-        p: { cpi: 18, acramp: 68, gap: 36, cash: 27 },
-        score: "red"
-    },
-    {
-        name: "Deal 03",
-        group: "US Large Enterprise DI & Mexico",
-        segment: "North America",
-        type: "Net New",
-        acvBand: "1. <$100K",
-        m: { cpi: "7.50%", acramp: "2.00%", gap: "-26.3", cash: "100%" },
-        p: { cpi: 18, acramp: 45, gap: 50, cash: 77 },
-        score: "yellow"
-    },
-    {
-        name: "Deal 04",
-        group: "US Healthcare",
-        segment: "North America",
-        type: "Net New",
-        acvBand: "1. <$100K",
-        m: { cpi: "7.50%", acramp: "0.00%", gap: "0", cash: "100%" },
-        p: { cpi: 18, acramp: 5, gap: 91, cash: 77 },
-        score: "yellow"
-    },
-    {
-        name: "Deal 05",
-        group: "ANZ",
-        segment: "APAC",
-        type: "Net New",
-        acvBand: "1. <$100K",
-        m: { cpi: "2.00%", acramp: "2.00%", gap: "-26.1", cash: "90%" },
-        p: { cpi: 82, acramp: 45, gap: 55, cash: 9 },
-        score: "yellow"
-    },
-    {
-        name: "Deal 06",
-        group: "US SLED",
-        segment: "North America",
-        type: "Net New",
-        acvBand: "1. <$100K",
-        m: { cpi: "4.00%", acramp: "2.00%", gap: "-21.2", cash: "98%" },
-        p: { cpi: 55, acramp: 45, gap: 68, cash: 50 },
-        score: "yellow"
-    },
-    {
-        name: "Deal 07",
-        group: "US Healthcare",
-        segment: "North America",
-        type: "Net New",
-        acvBand: "1. <$100K",
-        m: { cpi: "2.00%", acramp: "3.80%", gap: "-23", cash: "100%" },
-        p: { cpi: 82, acramp: 68, gap: 64, cash: 77 },
-        score: "green"
-    },
-    {
-        name: "Deal 08",
-        group: "US Large Enterprise DI & Mexico",
-        segment: "North America",
-        type: "Net New",
-        acvBand: "1. <$100K",
-        m: { cpi: "4.50%", acramp: "2.70%", gap: "0", cash: "99%" },
-        p: { cpi: 45, acramp: 59, gap: 91, cash: 64 },
-        score: "green"
-    },
-    {
-        name: "Deal 09",
-        group: "US Medium Enterprise DI",
-        segment: "North America",
-        type: "Net New",
-        acvBand: "1. <$100K",
-        m: { cpi: "4.50%", acramp: "6.90%", gap: "-30.8", cash: "92%" },
-        p: { cpi: 45, acramp: 86, gap: 41, cash: 18 },
-        score: "yellow"
-    },
-    {
-        name: "Deal 10",
-        group: "US FSI",
-        segment: "North America",
-        type: "Net New",
-        acvBand: "1. <$100K",
-        m: { cpi: "7.50%", acramp: "2.00%", gap: "-42.4", cash: "98%" },
-        p: { cpi: 18, acramp: 45, gap: 18, cash: 50 },
-        score: "red"
-    },
-    {
-        name: "Deal 11",
-        group: "US Medium Enterprise DI",
-        segment: "North America",
-        type: "Net New",
-        acvBand: "1. <$100K",
-        m: { cpi: "7.50%", acramp: "2.00%", gap: "-41.5", cash: "100%" },
-        p: { cpi: 18, acramp: 45, gap: 20, cash: 77 },
-        score: "red"
+  <script>
+    const DATA = {"quarters": {"Q1-27": {"label": "Q1 FY27", "fiscal_period": "2027-Q1", "renewal_fp": "Q1-2027", "summary": {"deal_count": 6, "ssr_opp_count": 8, "total_ssr_acv": 4205473.6517, "total_exit_acv": 6096705.5600000005}, "deals": [{"ssr_id": "006VT00000p7RJ3YAM", "ssr_name": "Cogir Canadian RH Management LP_growth only_SSR 2.47x - Primary Split - 75%", "segment": "North America", "group": "Canada", "close_date": "2026-04-27", "acv": 686065.1617, "account": "Cogir Canadian RH Management LP", "account_id": "0018000000qZJTrAAO", "renewals": [{"id": "006VT00000LF8B4YAL", "name": "(SSR) Cogir Canadian RH Management LP-FY27 (HCM SKUs Renewal)", "stage": "9- Closed/Won", "exit_acv": 623160.42, "renewal_acv": 623160.42, "fp": "Q1-2027", "close_date": "2026-04-27"}], "display_order": 1, "display_group": "cogir", "pair_no_divider_after": true}, {"ssr_id": "006VT00000poOWPYA2", "ssr_name": "Cogir Canadian RH Management LP_growth only_SSR 2.47x - Non-Primary Split - 25%", "segment": "North America", "group": "Canada", "close_date": "2026-04-27", "acv": 319615.33, "account": "Cogir Canadian RH Management LP", "account_id": "0018000000qZJTrAAO", "renewals": [{"id": "006VT00000RJkUOYA1", "name": "Cogir Canadian RH Management LP-FY27 (FINS Renewal)", "stage": "9- Closed/Won", "exit_acv": 361864.63, "renewal_acv": 378413.71, "fp": "Q1-2027", "close_date": "2026-04-27"}], "display_order": 2, "display_group": "cogir"}, {"ssr_id": "006VT00000neixNYAQ", "ssr_name": "Avis Budget Car Rental, LLC - WSP, HLP, JRNY, LRNSNA (1.39X SSR)", "segment": "North America", "group": "US Large Enterprise DI & Mexico", "close_date": "2026-04-07", "acv": 1164622.94, "account": "Avis Budget Car Rental, LLC", "account_id": "0013000000J2pevAAB", "renewals": [{"id": "006VT00000q5KD3YAM", "name": "Avis Budget Car Rental, LLC Renewal_2026- Paradox Migrated Closed Opportunity", "stage": "9- Closed/Won", "exit_acv": 717995.0, "renewal_acv": 717995.0, "fp": "Q1-2027", "close_date": "2026-04-13"}]}, {"ssr_id": "006VT00000mLReHYAW", "ssr_name": "Baystate Health, Inc.  - SSR: HLP, LRN, CCLRN, CE, WSP ACC (DNQ: 1.24x, 0 mons to renewal)", "segment": "North America", "group": "US Healthcare", "close_date": "2026-03-04", "acv": 420080.43, "account": "Baystate Health, Inc.", "account_id": "0013000000KyjgDAAR", "renewals": [{"id": "0064X00002P4LBUQA3", "name": "(SSR) Baystate Health, Inc.-FY27", "stage": "9- Closed/Won", "exit_acv": 1750192.8, "renewal_acv": 1750192.0, "fp": "Q1-2027", "close_date": "2026-03-06"}]}, {"ssr_id": "006VT00000oxUA9YAM", "ssr_name": "Children's Hospital of Eastern Ontario_EMPVCE_SSR (1.47x)", "segment": "North America", "group": "Canada", "close_date": "2026-04-28", "acv": 412633.35, "account": "Children's Hospital of Eastern Ontario - Ottawa Children's Treatment Centre", "account_id": "0018000001KdJCvAAN", "renewals": [{"id": "0064X00002KLp2JQAT", "name": "SSR - Children's Hospital of Eastern Ontario - Ottawa Children's Treatment C-FY27 (Renewal Option 2 of 3)", "stage": "9- Closed/Won", "exit_acv": 879356.04, "renewal_acv": 879356.04, "fp": "Q1-2027", "close_date": "2026-04-29"}]}, {"ssr_id": "006VT00000lgkpmYAA", "ssr_name": "GitHub, Inc._TLO, GPC_SSR (DNQ: 1.12x, 0 mo) Non-Primary Split 10%", "segment": "North America", "group": "US Large Enterprise DI & Mexico", "close_date": "2026-02-02", "acv": 11396.27, "account": "GitHub, Inc.", "account_id": "0018000000wBtjsAAC", "renewals": [{"id": "0064X00002P4L8wQAF", "name": "(SSR) GitHub, Inc.-FY27", "stage": "9- Closed/Won", "exit_acv": 925005.0, "renewal_acv": 925005.0, "fp": "Q1-2027", "close_date": "2026-02-13"}]}, {"ssr_id": "006VT00000lJ3bpYAC", "ssr_name": "GitHub, Inc._TLO, GPC_SSR (DNQ: 1.12x, 0 mo) Primary Split - 90%", "segment": "North America", "group": "US Large Enterprise DI & Mexico", "close_date": "2026-02-02", "acv": 102566.43, "account": "GitHub, Inc.", "account_id": "0018000000wBtjsAAC", "renewals": [{"id": "0064X00002P4L8wQAF", "name": "(SSR) GitHub, Inc.-FY27", "stage": "9- Closed/Won", "exit_acv": 925005.0, "renewal_acv": 925005.0, "fp": "Q1-2027", "close_date": "2026-02-13"}]}, {"ssr_id": "006VT00000VZqgEYAT", "ssr_name": "PayPay_SSR_FY27", "segment": "Japan", "group": "Japan", "close_date": "2026-04-10", "acv": 1088493.74, "account": "PayPay Corporation", "account_id": "0011B00002GMZ4FQAX", "renewals": [{"id": "006VT00000Z25lvYAB", "name": "PayPay Corporation-OF#498198-FY27", "stage": "9- Closed/Won", "exit_acv": 169676.02, "renewal_acv": 173039.35, "fp": "Q1-2027", "close_date": "2026-04-27"}, {"id": "0064X00002JfFzyQAF", "name": "(SSR) PayPay Corporation-FY27", "stage": "9- Closed/Won", "exit_acv": 669455.65, "renewal_acv": 669455.65, "fp": "Q1-2027", "close_date": "2026-04-26"}]}]}, "Q2-27": {"label": "Q2 FY27", "fiscal_period": "2027-Q2", "renewal_fp": "Q2-2027", "summary": {"deal_count": 15, "ssr_opp_count": 16, "total_ssr_acv": 4985163.19, "total_exit_acv": 13554563.629999999}, "deals": [{"ssr_id": "006VT00000rMGVpYAO", "ssr_name": "Cenovus Energy Inc._USP, CP, & TT_SSR 1.27x", "segment": "North America", "group": "Canada", "close_date": "2026-06-22", "acv": 424955.16, "account": "Cenovus Energy Inc.", "account_id": "0018000000kKhkkAAC", "renewals": [{"id": "0064X00002JfyQ9QAJ", "name": "SSR - Cenovus Energy Inc.-FY27", "stage": "9- Closed/Won", "exit_acv": 1553429.93, "renewal_acv": 1553429.93, "fp": "Q2-2027", "close_date": "2026-06-22"}]}, {"ssr_id": "006VT00000qvSmPYAU", "ssr_name": "DTN, LLC - SSR – LDP: EMPVCE, WW, PPLA, FLXCRD - 1.44x - +250k Incremental", "segment": "North America", "group": "US Medium Enterprise DI", "close_date": "2026-05-26", "acv": 434879.48, "account": "DTN, LLC", "account_id": "0018000000M5o1EAAR", "renewals": [{"id": "0064X000027EJ25QAG", "name": "DTN, LLC  - FY27 Renewal SSR", "stage": "9- Closed/Won", "exit_acv": 897767.99, "renewal_acv": 999020.0, "fp": "Q2-2027", "close_date": "2026-05-26"}]}, {"ssr_id": "006VT00000r0ZyXYAU", "ssr_name": "HSS Enterprises Ltd_growth only_SSR 1.18x", "segment": "North America", "group": "Canada", "close_date": "2026-07-29", "acv": 146374.5, "account": "HSS Enterprises Ltd", "account_id": "0018000001LZbbtAAD", "renewals": [{"id": "0064X00002PjG5bQAF", "name": "SSR - HSS Enterprises Ltd-FY27", "stage": "7- Won/Customer Signed", "exit_acv": 804383.94, "renewal_acv": 804383.94, "fp": "Q2-2027", "close_date": "2026-07-30"}]}, {"ssr_id": "006VT00000qmXWnYAM", "ssr_name": "Huntington Library Art Collections and Botanical Garden_growth only_SSR", "segment": "North America", "group": "US SLED", "close_date": "2026-07-15", "acv": 140941.2, "account": "Huntington Library Art Collections and Botanical Garden, The", "account_id": "0018000001Mt1ciAAB", "renewals": [{"id": "0064X00001vCD9MQAW", "name": "Huntington Library Art Collections and Botanical Garden, The - 2026 Renewal (Confirmed SSR)", "stage": "9- Closed/Won", "exit_acv": 349359.0, "renewal_acv": 0.0, "fp": "Q2-2027", "close_date": "2026-07-15"}]}, {"ssr_id": "006VT00000syWkHYAU", "ssr_name": "IRM - SSR for WLPBS", "segment": "North America", "group": "US Large Enterprise DI & Mexico", "close_date": "2026-07-30", "acv": 529012.98, "account": "Iron Mountain Information Management, LLC", "account_id": "0013000000IH8LJAA1", "renewals": [{"id": "0064X00001xzo0KQAQ", "name": "Iron Mountain Information Management, LLC - 2026 Renewal (moving to an SSR)", "stage": "7- Won/Customer Signed", "exit_acv": 2981000.0, "renewal_acv": 2981000.0, "fp": "Q2-2027", "close_date": "2026-07-30"}]}, {"ssr_id": "006VT00000pRJxFYAW", "ssr_name": "ITT Industries Holdings, Inc._only gorwth_SSR 1.21x", "segment": "North America", "group": "US Large Enterprise DI & Mexico", "close_date": "2026-07-24", "acv": 223870.67, "account": "ITT Industries Holdings, Inc.", "account_id": "00130000008NNGEAA4", "renewals": [{"id": "006VT00000Yak8WYAR", "name": "(SSR) ITT Industries Holdings, Inc.-FY27 (WSP Renewal)", "stage": "9- Closed/Won", "exit_acv": 100000.0, "renewal_acv": 100000.0, "fp": "Q2-2027", "close_date": "2026-07-30"}]}, {"ssr_id": "006VT00000rb4pJYAQ", "ssr_name": "Ikusi SSR TT", "segment": "EMEA", "group": "EMEA South", "close_date": "2026-07-24", "acv": 55256.32, "account": "IKUSI REDES DE TELECOMUNICACIONES SLU", "account_id": "0014X00002iGhRJQA0", "renewals": [{"id": "0064X00002P59rnQAB", "name": "(SSR) IKUSI REDES DE TELECOMUNICACIONES SLU-FY27", "stage": "9- Closed/Won", "exit_acv": 142461.15, "renewal_acv": 142461.15, "fp": "Q2-2027", "close_date": "2026-07-31"}]}, {"ssr_id": "006VT00000ojSRaYAM", "ssr_name": "JCDecaux UK Limited - SSR CEXP, PLNW-PRO, LRNSNA", "segment": "EMEA", "group": "EMEA South", "close_date": "2026-06-30", "acv": 88258.6, "account": "JCDecaux UK Limited", "account_id": "0014X00002K4tHtQAJ", "renewals": [{"id": "0064X00002P4rlAQAR", "name": "SSR JCDecaux UK Limited-FY27", "stage": "9- Closed/Won", "exit_acv": 597224.72, "renewal_acv": 597224.72, "fp": "Q2-2027", "close_date": "2026-06-30"}]}, {"ssr_id": "006VT00000qiVDRYA2", "ssr_name": "LUMA Energy ServCo, LLC_LDP: AITB, AIRC, WSP_SSR 1.3x", "segment": "North America", "group": "Canada", "close_date": "2026-06-30", "acv": 316059.98, "account": "LUMA Energy ServCo, LLC", "account_id": "0011B00002Hka9oQAB", "renewals": [{"id": "0064X00002Jfi3WQAR", "name": "SSR - LUMA Energy, LLC-FY27", "stage": "9- Closed/Won", "exit_acv": 868856.0, "renewal_acv": 868856.0, "fp": "Q2-2027", "close_date": "2026-07-14"}]}, {"ssr_id": "006VT00000qiUXWYA2", "ssr_name": "Medavie Health Services Inc._LDP: HLP_SSR 1.2x", "segment": "North America", "group": "Canada", "close_date": "2026-07-16", "acv": 300807.63, "account": "Medavie Inc.", "account_id": "0018000001MGUgGAAX", "renewals": [{"id": "0064X00002GXS0dQAH", "name": "(SSR) Medavie Health Services Inc. / Order Form 383155  /   2026 Renewal", "stage": "9- Closed/Won", "exit_acv": 1261820.69, "renewal_acv": 1261820.69, "fp": "Q2-2027", "close_date": "2026-07-15"}]}, {"ssr_id": "006VT00000j7PuEYAU", "ssr_name": "Medley, Inc. - SSR_Extend(Add-on)‗Primary Split‐50％", "segment": "Japan", "group": "Japan", "close_date": "2026-06-22", "acv": 99933.24, "account": "Medley, Inc.", "account_id": "0014X00002K4Lh6QAF", "renewals": [{"id": "006VT00000U4cgZYAR", "name": "Medley, Inc.-FY27 (PLNF Renewal)", "stage": "35-Closed/Lost", "exit_acv": 38417.21, "renewal_acv": 0.0, "fp": "Q2-2027", "close_date": "2026-07-31"}]}, {"ssr_id": "006VT00000re7sJYAQ", "ssr_name": "Non-Primary Quote- Split 50%", "segment": "Japan", "group": "Japan", "close_date": "2026-06-22", "acv": 99933.24, "account": "Medley, Inc.", "account_id": "0014X00002K4Lh6QAF", "renewals": [{"id": "006VT00000U4cgZYAR", "name": "Medley, Inc.-FY27 (PLNF Renewal)", "stage": "35-Closed/Lost", "exit_acv": 38417.21, "renewal_acv": 0.0, "fp": "Q2-2027", "close_date": "2026-07-31"}]}, {"ssr_id": "006VT00000mVcmvYAC", "ssr_name": "Nutex Health - SSR (CLM, PRJ, PRA, ACC, PKN, MSG)", "segment": "North America", "group": "US Healthcare", "close_date": "2026-05-29", "acv": 600985.0, "account": "Nutex Health", "account_id": "0014X00002OtqUpQAJ", "renewals": [{"id": "006VT00000lXFtnYAG", "name": "Nutex Health-FY27", "stage": "7- Won/Customer Signed", "exit_acv": 214147.0, "renewal_acv": 214147.0, "fp": "Q2-2027", "close_date": "2026-05-29"}]}, {"ssr_id": "006VT00000pyOIDYA2", "ssr_name": "O'Melveny & Myers - SSR - UKP, GPC, XTND Pro (1.52x, 12 mo)", "segment": "North America", "group": "US Medium Enterprise DI", "close_date": "2026-06-15", "acv": 271712.2, "account": "O'Melveny & Myers LLP", "account_id": "0013000000J0qrOAAR", "renewals": [{"id": "0064X00002JfvXSQAZ", "name": "(SSR) O'Melveny & Myers LLP-FY27", "stage": "9- Closed/Won", "exit_acv": 523007.0, "renewal_acv": 583800.66, "fp": "Q2-2027", "close_date": "2026-06-17"}]}, {"ssr_id": "006VT00000qSxtdYAC", "ssr_name": "Shake Shack Enterprises_FLXCRD, EMPVCE, WW, ACC, XTND PRO, WSP_SSR 1.41x_AWS MP", "segment": "North America", "group": "US Large Enterprise DI & Mexico", "close_date": "2026-06-19", "acv": 1029077.0, "account": "Shake Shack Enterprises, LLC", "account_id": "0018000001JinQzAAJ", "renewals": [{"id": "0064X000022TRw5QAG", "name": "(SSR) Shake Shack Enterprises, LLC / Order Form 332658 - LDP SKUs (Renewal) - 2026 Renewal", "stage": "9- Closed/Won", "exit_acv": 2639352.0, "renewal_acv": 2639352.0, "fp": "Q2-2027", "close_date": "2026-06-21"}]}, {"ssr_id": "006VT00000rRM9CYAW", "ssr_name": "YPO, Inc -- SSR", "segment": "North America", "group": "US SLED", "close_date": "2026-07-22", "acv": 223105.99, "account": "YPO, Inc.", "account_id": "0011B00002B9YDEQA3", "renewals": [{"id": "0064X00001xzoDsQAI", "name": "YPO, Inc. / Order Form 254354 - 2026 Renewal (Confirmed SSR)", "stage": "9- Closed/Won", "exit_acv": 583337.0, "renewal_acv": 789991.34, "fp": "Q2-2027", "close_date": "2026-07-30"}]}]}}, "default": "Q2-27"};
+    let activeQuarter = DATA.default || Object.keys(DATA.quarters)[0];
+    let activeSegment = 'all';
+
+    function fmtMoney(n) {
+      if (n == null || Number.isNaN(n)) return '—';
+      return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+      }).format(n);
     }
-];
 
-let activeScore = '';
+    function stageClass(stage) {
+      if (!stage) return '';
+      if (stage.includes('Closed/Won') || stage.includes('Won/Customer Signed')) return 'won';
+      if (stage.includes('Closed/Lost')) return 'lost';
+      return '';
+    }
 
-function pctClass(v) {
-    return v >= 65 ? 'high' : v >= 35 ? 'mid' : 'low';
-}
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
 
-function metricCell(val, pct, borderLeft, borderRight) {
-    const cls = pctClass(pct);
-    const s = (borderLeft ? 'border-left:2px solid #c7d2fe;' : '') + (borderRight ? 'border-right:2px solid #c7d2fe;' : '');
-    return `<td class="td-right" style="${s}">
-        <div style="font-variant-numeric:tabular-nums;">${val}</div>
-        <div class="pct-wrap" style="margin-top:5px;">
-            <div class="pct-bar"><div class="pct-fill ${cls}" style="width:${pct}%"></div></div>
-            <span class="pct-val ${cls}">${pct}<sup style="font-size:8px">th</sup></span>
-        </div>
-    </td>`;
-}
+    function getFilteredDeals(q) {
+      if (activeSegment === 'all') return q.deals;
+      return q.deals.filter(d => d.segment === activeSegment);
+    }
 
-function scoreLabel(s) {
-    return { green: 'Green', yellow: 'Yellow', red: 'Red' }[s];
-}
+    function computeSummary(deals) {
+      const ssrAcv = {};
+      const uniqueAccounts = new Set();
+      const uniqueExit = {};
+      deals.forEach(deal => {
+        const ssrKey = deal.ssr_id || deal.ssr_name;
+        ssrAcv[ssrKey] = deal.acv || 0;
+        uniqueAccounts.add(deal.account_id || deal.account || ssrKey);
+        deal.renewals.forEach(r => {
+          const rid = r.id || r.name;
+          if (rid && r.exit_acv != null) uniqueExit[rid] = r.exit_acv;
+        });
+      });
+      return {
+        deal_count: uniqueAccounts.size,
+        ssr_opp_count: Object.keys(ssrAcv).length,
+        total_ssr_acv: Object.values(ssrAcv).reduce((a, b) => a + b, 0),
+        total_exit_acv: Object.values(uniqueExit).reduce((a, b) => a + b, 0),
+        row_count: deals.reduce((n, d) => n + d.renewals.length, 0)
+      };
+    }
 
-function buildRow(d) {
-    const typeClass = d.type === 'Net New' ? 'net-new' : 'expansion';
-    return `
-    <tr data-segment="${d.segment}" data-type="${d.type}" data-acv="${d.acvBand}" data-score="${d.score}">
-        <td><div class="td-name" title="${d.name}">${d.name}</div></td>
-        <td style="font-size:11px;color:#6b7280;white-space:nowrap;">${d.segment}</td>
-        <td style="font-size:11px;color:#6b7280;white-space:nowrap;">${d.group}</td>
-        <td><span class="tag ${typeClass}">${d.type}</span></td>
-        <td><span class="tag acv">${d.acvBand}</span></td>
-        ${metricCell(d.m.cpi,    d.p.cpi,    true,  false)}
-        ${metricCell(d.m.acramp, d.p.acramp, false, false)}
-        ${metricCell(d.m.gap,    d.p.gap,    false, false)}
-        ${metricCell(d.m.cash,   d.p.cash,   false, true)}
-        <td class="td-center" style="border-left:1px solid #f3f4f6;">
-            <span class="score-badge ${d.score}">
-                <span class="score-dot"></span>${scoreLabel(d.score)}
-            </span>
+    function flattenDeals(deals) {
+      const pairs = [];
+      deals.forEach(deal => {
+        deal.renewals.forEach(r => {
+          pairs.push({
+            deal,
+            renewal: r,
+            ssrKey: deal.ssr_id || deal.ssr_name,
+            renewalKey: r.id || r.name,
+          });
+        });
+      });
+      pairs.sort((a, b) => {
+        const ao = a.deal.display_order ?? 99999;
+        const bo = b.deal.display_order ?? 99999;
+        if (ao !== bo) return ao - bo;
+        const byRenewal = String(a.renewalKey).localeCompare(String(b.renewalKey));
+        if (byRenewal !== 0) return byRenewal;
+        return String(a.ssrKey).localeCompare(String(b.ssrKey));
+      });
+      return pairs;
+    }
+
+    function computeRowspans(pairs) {
+      const ssrSpan = new Array(pairs.length).fill(0);
+      const renSpan = new Array(pairs.length).fill(0);
+
+      let i = 0;
+      while (i < pairs.length) {
+        let j = i + 1;
+        while (j < pairs.length && pairs[j].ssrKey === pairs[i].ssrKey) j++;
+        ssrSpan[i] = j - i;
+        i = j;
+      }
+
+      i = 0;
+      while (i < pairs.length) {
+        let j = i + 1;
+        while (j < pairs.length && pairs[j].renewalKey === pairs[i].renewalKey) j++;
+        renSpan[i] = j - i;
+        i = j;
+      }
+
+      return { ssrSpan, renSpan };
+    }
+
+    function ssrCellsHtml(deal, rowspan) {
+      const ssrClose = deal.close_date ? `<div class="deal-sub">Close: ${escapeHtml(deal.close_date)}</div>` : '';
+      const rs = rowspan > 1 ? ` rowspan="${rowspan}" class="merged"` : '';
+      return `
+        <td data-label="SSR Opportunity"${rs}>
+          <div class="deal-name">${escapeHtml(deal.ssr_name)}</div>
+          <div class="deal-sub">${escapeHtml(deal.account || '')}</div>
+          ${ssrClose}
         </td>
-    </tr>`;
-}
+        <td data-label="Segment"${rs}><span class="badge">${escapeHtml(deal.segment)}</span></td>
+        <td data-label="Group"${rs}>${escapeHtml(deal.group)}</td>
+        <td data-label="SSR ACV" class="num${rowspan > 1 ? ' merged' : ''}"${rowspan > 1 ? ` rowspan="${rowspan}"` : ''}>
+          <span class="money large">${fmtMoney(deal.acv)}</span>
+        </td>`;
+    }
 
-function applyFilters() {
-    const seg = document.getElementById('f-segment').value;
-    const typ = document.getElementById('f-type').value;
-    const acv = document.getElementById('f-acv').value;
+    function renewalCellsHtml(r, rowspan) {
+      const renClose = r.close_date ? `<span>Close: ${escapeHtml(r.close_date)}</span>` : '';
+      const rs = rowspan > 1 ? ` rowspan="${rowspan}" class="merged"` : '';
+      return `
+        <td data-label="Matched Renewal"${rs}>
+          <div class="renewal-name">${escapeHtml(r.name)}</div>
+          <div class="renewal-meta">
+            <span><span class="stage-pill ${stageClass(r.stage)}">${escapeHtml(r.stage)}</span></span>
+            <span>Fiscal quarter: <strong>${escapeHtml(r.fp)}</strong></span>
+            ${renClose}
+          </div>
+        </td>
+        <td data-label="Exit Year ACV" class="num${rowspan > 1 ? ' merged' : ''}"${rowspan > 1 ? ` rowspan="${rowspan}"` : ''}>
+          <span class="money large">${fmtMoney(r.exit_acv)}</span>
+        </td>`;
+    }
 
-    const filtered = DEALS.filter(d =>
-        (!seg || d.segment === seg) &&
-        (!typ || d.type === typ) &&
-        (!acv || d.acvBand === acv) &&
-        (!activeScore || d.score === activeScore)
-    );
+    function renderQuarterTabs() {
+      const nav = document.getElementById('quarter-tabs');
+      nav.innerHTML = Object.entries(DATA.quarters).map(([key, q]) =>
+        `<button type="button" class="pill-tab${key === activeQuarter ? ' active' : ''}" data-quarter="${escapeHtml(key)}">${escapeHtml(q.label)}</button>`
+      ).join('');
 
-    const tbody = document.getElementById('deals-tbody');
-    tbody.innerHTML = filtered.map(buildRow).join('');
+      nav.querySelectorAll('.pill-tab').forEach(btn => {
+        btn.addEventListener('click', () => {
+          activeQuarter = btn.dataset.quarter;
+          activeSegment = 'all';
+          renderQuarterTabs();
+          renderSegmentTabs();
+          renderQuarter();
+        });
+      });
+    }
 
-    document.getElementById('showing-text').textContent = `Showing ${filtered.length} deal${filtered.length !== 1 ? 's' : ''}`;
-    document.getElementById('empty-state').style.display = filtered.length === 0 ? 'block' : 'none';
+    function renderSegmentTabs() {
+      const q = DATA.quarters[activeQuarter];
+      const segments = [...new Set(q.deals.map(d => d.segment))].sort();
+      const nav = document.getElementById('segment-tabs');
 
-    document.getElementById('cnt-total').textContent  = filtered.length;
-    document.getElementById('cnt-green').textContent  = filtered.filter(d => d.score === 'green').length;
-    document.getElementById('cnt-yellow').textContent = filtered.filter(d => d.score === 'yellow').length;
-    document.getElementById('cnt-red').textContent    = filtered.filter(d => d.score === 'red').length;
-}
+      const tabs = [
+        { key: 'all', label: 'All segments' },
+        ...segments.map(s => ({ key: s, label: s }))
+      ];
 
-function setScoreFilter(btn, score) {
-    activeScore = score;
-    document.querySelectorAll('.score-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    applyFilters();
-}
+      nav.innerHTML = tabs.map(t =>
+        `<button type="button" class="pill-tab segment${t.key === activeSegment ? ' active' : ''}" data-segment="${escapeHtml(t.key)}">${escapeHtml(t.label)}</button>`
+      ).join('');
 
-applyFilters();
-</script>
+      nav.querySelectorAll('.pill-tab').forEach(btn => {
+        btn.addEventListener('click', () => {
+          activeSegment = btn.dataset.segment;
+          renderSegmentTabs();
+          renderQuarter();
+        });
+      });
+    }
+
+    function renderQuarter() {
+      const q = DATA.quarters[activeQuarter];
+      if (!q) return;
+
+      const filteredDeals = getFilteredDeals(q);
+      const summary = computeSummary(filteredDeals);
+      const pairs = flattenDeals(filteredDeals);
+      const { ssrSpan, renSpan } = computeRowspans(pairs);
+      const useMerge = !window.matchMedia('(max-width: 900px)').matches;
+      const segmentLabel = activeSegment === 'all' ? 'all segments' : activeSegment;
+
+      document.getElementById('hero-title').textContent =
+        `${q.label} Won SSR Deals & Matched Renewals`;
+      document.getElementById('hero-desc').textContent =
+        `Won Supersede and Replace opportunities closed in fiscal ${q.label}, matched to renewal opportunities in the same fiscal quarter (${q.renewal_fp}) excluding Stage 50 (Historical Data Only).`;
+
+      const cards = [
+        { label: 'Unique accounts (renewal → SSR, same quarter)', value: summary.deal_count.toLocaleString(), cls: '' },
+        { label: 'Total won SSR ACV', value: fmtMoney(summary.total_ssr_acv), cls: 'accent' },
+        { label: 'Total Exit Year ACV (matched renewals)', value: fmtMoney(summary.total_exit_acv), cls: 'orange' }
+      ];
+
+      document.getElementById('summary-cards').innerHTML = cards.map(c =>
+        `<div class="card"><div class="card-label">${escapeHtml(c.label)}</div><div class="card-value ${c.cls}">${c.value}</div></div>`
+      ).join('');
+
+      document.getElementById('deal-count-meta').textContent =
+        `${summary.deal_count} unique accounts (${summary.ssr_opp_count} SSR opps, ${summary.row_count} renewal rows) \u2022 ${segmentLabel}`;
+
+      document.getElementById('filters-note').innerHTML =
+        `<strong>SSR filter:</strong> Fiscal period ${escapeHtml(q.fiscal_period)}, Stage Won, Sub-type Supersede and Replace &nbsp;|&nbsp; ` +
+        `<strong>Renewal filter:</strong> Fiscal quarter ${escapeHtml(q.renewal_fp)}, Stage &ne; 50` +
+        (activeSegment !== 'all' ? ` &nbsp;|&nbsp; <strong>Segment:</strong> ${escapeHtml(activeSegment)}` : '');
+
+      document.getElementById('renewal-col-header').textContent =
+        `Matched Renewal (${q.renewal_fp})`;
+
+      document.getElementById('footer-text').textContent =
+        `Generated from SSRs with Renewals in the Same Quarter data \u2022 ${q.label}`;
+
+      const tbody = document.getElementById('deals-body');
+      const empty = document.getElementById('empty-state');
+      const table = tbody.closest('table');
+
+      if (!pairs.length) {
+        tbody.innerHTML = '';
+        empty.hidden = false;
+        table.hidden = true;
+        return;
+      }
+
+      empty.hidden = true;
+      table.hidden = false;
+
+      tbody.innerHTML = pairs.map((pair, i) => {
+        const { deal, renewal: r } = pair;
+        const showSsr = !useMerge || ssrSpan[i] > 0;
+        const showRen = !useMerge || renSpan[i] > 0;
+        const ssrRs = useMerge ? ssrSpan[i] : 1;
+        const renRs = useMerge ? renSpan[i] : 1;
+
+        const rowClasses = ['ssr-row'];
+        if (pair.deal.pair_no_divider_after) rowClasses.push('no-row-divider');
+        if (pair.deal.display_group && !pair.deal.pair_no_divider_after) rowClasses.push('pair-group-end');
+
+        return `
+          <tr class="${rowClasses.join(' ')}">
+            ${showSsr ? ssrCellsHtml(deal, ssrRs) : ''}
+            ${showRen ? renewalCellsHtml(r, renRs) : ''}
+          </tr>`;
+      }).join('');
+    }
+
+    renderQuarterTabs();
+    renderSegmentTabs();
+    renderQuarter();
+  </script>
 </body>
 </html>
